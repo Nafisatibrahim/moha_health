@@ -20,6 +20,8 @@ Information still missing:
 Last question asked:
 {last_question}
 
+The patient just answered the previous question. Use that information to update the missing fields.
+
 Rules:
 - Ask ONE short follow-up question.
 - Only ask about fields listed in "Information still missing".
@@ -27,18 +29,19 @@ Rules:
 - Do NOT ask about fields already collected.
 - Return ONLY the question.
 
-Symptom guidance (to help determine the LOCATION or ADDITIONAL_SYMPTOMS):
+Symptom guidance (to help determine LOCATION or ADDITIONAL_SYMPTOMS):
 
 Headache:
-- ask where on the head the pain is located
-- ask about sensitivity to light or nausea
+- where on the head the pain is located
+- sensitivity to light
+- nausea
 
 Abdominal pain:
-- ask whether the pain is in the upper or lower abdomen (location)
-- ask if the pain is sharp or dull (additional_symptoms)
+- upper vs lower abdomen (location)
+- sharp vs dull pain (additional_symptoms)
 
 Chest pain:
-- ask if the pain spreads to the arm, jaw, or back (additional_symptoms)
-- ask about difficulty breathing (additional_symptoms)
+- pain spreading to arm or jaw (additional_symptoms)
+- difficulty breathing (additional_symptoms)
 
 Ask the most medically relevant question to collect ONE missing field.

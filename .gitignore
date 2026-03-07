@@ -7,3 +7,15 @@ venv/
 # Python
 __pycache__/
 *.pyc
+*.pyo
+
+# Cursor / editor
+.cursor/
+.cursorrules
+
+# IDE (optional: remove if you want to share .vscode)
+.vscode/
+
+# Binaries / build
+backend/hello_vitals
+build/
