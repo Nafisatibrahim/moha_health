@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Triage Intake</title>
+</head>
+
+<body>
+
+<h2>AI Hospital Intake Assistant</h2>
+
+<div id="chat" style="border:1px solid black;height:300px;overflow:auto;padding:10px;margin-bottom:10px;"></div>
+
+<input id="message" type="text" placeholder="Type your message..." style="width:70%">
+<button onclick="sendMessage()">Send</button>
+
+<script>
+
+async function sendMessage() {
+
+    const input = document.getElementById("message")
+    const chat = document.getElementById("chat")
+
+    const text = input.value
+
+    chat.innerHTML += "<p><b>You:</b> " + text + "</p>"
+
+    const response = await fetch("http://127.0.0.1:8000/assess", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            text: text
+        })
+    })
+
+    const data = await response.json()
+
+    if (data.intake_question) {
+        chat.innerHTML += "<p><b>AI:</b> " + data.intake_question + "</p>"
+    }
+
+    if (data.assistant_response) {
+        chat.innerHTML += "<p><b>AI:</b> " + data.assistant_response + "</p>"
+    }
+
+    input.value = ""
+
+}
+
+</script>
+
+</body>
+</html>
