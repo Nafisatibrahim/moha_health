@@ -14,14 +14,17 @@ from integrations.backboard_client import (
 )
 
 from services.intake import (
-    store_answer,       # Store patient answers
-    get_intake_data,    # Retrieve collected intake data
-    get_missing_fields, # Check what intake information is still missing
-    is_intake_complete, # Check if intake is complete    
-    store_last_question, # Store the last question asked
-    get_last_question    # Get the last question asked
+    store_answer,
+    get_intake_data,
+    get_missing_fields,
+    is_intake_complete,
+    store_last_question,
+    get_last_question,
+    REQUIRED_FIELDS,
 )
 
+from services.triage import run_triage
+from services.vitals_triage import escalate_with_vitals
 from services.extraction import extract_intake_field
 from services.vitals import get_vitals_from_video
 
@@ -51,6 +54,19 @@ def root():
             "POST /vitals": "Upload video file for heart rate & respiration (Presage)",
             "POST /vitals/from-url": "Vitals from video URL (e.g. Cloudinary)",
         },
+    }
+
+
+@app.get("/frontend-config")
+def frontend_config():
+    """
+    Expose non-secret frontend config so index.html can read Cloudinary settings
+    without hardcoding them.
+    """
+    return {
+        "cloudinary_cloud_name": os.getenv("CLOUDINARY_CLOUD_NAME", ""),
+        "cloudinary_upload_preset": os.getenv("CLOUDINARY_UPLOAD_PRESET", ""),
+        "backend_base_url": "http://127.0.0.1:8000",
     }
 
 
@@ -96,6 +112,7 @@ async def vitals_from_url(body: dict):
 
     tmp_path = None
     try:
+        print("VIDEO URL RECEIVED:", url)
         r = requests.get(url, stream=True, timeout=60)
         r.raise_for_status()
         # Prefer .mp4; Cloudinary and others often use it
@@ -111,12 +128,15 @@ async def vitals_from_url(body: dict):
                 tmp.write(chunk)
             tmp_path = tmp.name
         result = get_vitals_from_video(tmp_path)
+        print("PRESAGE VITALS RESULT:", result)
         if result is None:
             return {"error": "Could not compute vitals from video"}
         return result
     except requests.RequestException as e:
+        print("VIDEO FETCH ERROR:", e)
         return {"error": f"Failed to fetch video: {str(e)}"}
     except Exception as e:
+        print("VITALS_FROM_URL ERROR:", e)
         return {"error": str(e)}
     finally:
         if tmp_path:
@@ -129,9 +149,9 @@ async def vitals_from_url(body: dict):
 # Define the assess endpoint
 @app.post("/assess")
 def assess(data: dict):
-
-    # Get the user's message
-    text = data["text"]
+    # User message and optional vitals (from video upload flow)
+    text = data.get("text") or ""
+    vitals = data.get("vitals")  # e.g. {"heart_rate": 72, "respiration": 16}
 
     # Get the collected intake data
     intake_data = get_intake_data(thread_id)
@@ -139,38 +159,34 @@ def assess(data: dict):
     # If no data yet → store the primary symptom
     if "primary_symptom" not in intake_data:
         store_answer(thread_id, "primary_symptom", text)
-
-    # If data already exists, extract structured field from user answer
     else:
-        # Extract structured field from user answer
-        parsed = extract_intake_field(thread_id, text) 
+        # Refresh so we have current missing_fields and last_question for extraction
+        intake_data = get_intake_data(thread_id)
+        missing_fields = get_missing_fields(thread_id)
+        missing_fields = [f for f in missing_fields if f != "primary_symptom"]
+        last_question = get_last_question(thread_id)
 
-        # If the extraction is successful, store the answer
+        # Extract which field this answer belongs to (with context so we don't loop)
+        parsed = extract_intake_field(thread_id, text, last_question=last_question, missing_fields=missing_fields)
+
         if parsed:
-            field = parsed.get("field")
+            field = (parsed.get("field") or "").strip().lower()
             value = parsed.get("value")
-
-            if field and value:
-                # Clamp severity values
+            if field and value is not None:
+                value = str(value).strip()
+            # Only store if it's a known intake field (avoid storing wrong keys)
+            if field in [f for f in REQUIRED_FIELDS if f != "primary_symptom"] and value:
                 if field == "severity":
                     try:
-                        value = int(value)
-                        value = max(1, min(10, value))
-                    except:
+                        value = max(1, min(10, int(value)))
+                    except (TypeError, ValueError):
                         pass
-
                 store_answer(thread_id, field, value)
 
-    # Refresh the collected intake data just in case it's outdated
+    # Refresh the collected intake data
     intake_data = get_intake_data(thread_id)
-
-    # Check missing intake fields
     missing_fields = get_missing_fields(thread_id)
-
-    # Primary symptom is already known, remove it from missing fields
     missing_fields = [f for f in missing_fields if f != "primary_symptom"]
-
-    # Get the last question asked
     last_question = get_last_question(thread_id)
 
     # If intake is not complete → ask AI to generate next question
@@ -198,26 +214,11 @@ def assess(data: dict):
             "assistant_question": response
         }
 
-    # Intake complete → run triage
-    message = f"""
-    Patient Intake Report:
-
-    {intake_data}
-
-    Determine:
-
-    1. Urgency level (LOW, MEDIUM, HIGH)
-    2. Recommended department
-    3. Recommended action
-
-    Use the triage_tool if necessary.
-    """
-
-    response = send_message(thread_id, message)
-    if response is None:
-        response = "[No response from assistant. Check backend logs and Backboard API.]"
+    # Intake complete → rule-based triage then vitals escalation
+    triage_result = run_triage(intake_data)
+    triage_result = escalate_with_vitals(triage_result, vitals)
 
     return {
         "intake_data": intake_data,
-        "assistant_response": response
+        "triage": triage_result
     }
