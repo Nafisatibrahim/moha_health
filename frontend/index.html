@@ -13,6 +13,9 @@
 <input id="message" type="text" placeholder="Type your message..." style="width:70%">
 <button onclick="sendMessage()">Send</button>
 
+<h3 style="margin-top:20px">Debug – last response JSON</h3>
+<pre id="debug-json" style="border:1px solid #ccc;background:#f5f5f5;padding:10px;max-height:300px;overflow:auto;font-size:12px;white-space:pre-wrap;word-break:break-all;">(no response yet)</pre>
+
 <script>
 
 async function sendMessage() {
@@ -35,9 +38,13 @@ async function sendMessage() {
     })
 
     const data = await response.json()
+    console.log(data)
 
-    if (data.intake_question) {
-        chat.innerHTML += "<p><b>AI:</b> " + data.intake_question + "</p>"
+    // Show response JSON in debug panel
+    document.getElementById("debug-json").textContent = JSON.stringify(data, null, 2)
+
+    if (data.assistant_question) {
+        chat.innerHTML += "<p><b>AI:</b> " + data.assistant_question + "</p>"
     }
 
     if (data.assistant_response) {

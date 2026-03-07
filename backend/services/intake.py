@@ -2,14 +2,16 @@
 # The file is responsible for:
 # - Tracking conversation progress
 # - Storing patient answers
-# - Providing intake questions
+# - Defining required intake fields
+# - Checking what intake information is still missing
 
-# Map intake questions to structured fields
-INTAKE_FLOW = [
-    ("location", "Where exactly is the pain located?"),
-    ("severity", "How severe is the pain from 1 to 10?"),
-    ("duration", "When did it start?"),
-    ("additional_symptoms", "Do you have any additional symptoms such as fever, nausea, or difficulty breathing?")
+# Required intake fields that must be collected before triage
+REQUIRED_FIELDS = [
+    "primary_symptom",
+    "location",
+    "severity",
+    "duration",
+    "additional_symptoms"
 ]
 
 # Track intake progress per conversation
@@ -34,16 +36,6 @@ def advance_step(thread_id: str):
     thread_steps[thread_id] = current + 1
 
 
-def get_question(step: int):
-    """
-    Return the next intake question.
-    """
-    if step < len(INTAKE_FLOW):
-        return INTAKE_FLOW[step]
-
-    return None
-
-
 def store_answer(thread_id: str, key: str, value: str):
     """
     Store a patient's answer.
@@ -59,3 +51,42 @@ def get_intake_data(thread_id: str):
     Retrieve collected intake data.
     """
     return thread_intake_data.get(thread_id, {})
+
+
+def get_missing_fields(thread_id: str):
+    """
+    Return the list of required intake fields that are still missing.
+    """
+    intake_data = get_intake_data(thread_id)
+
+    missing_fields = []
+
+    for field in REQUIRED_FIELDS:
+        value = intake_data.get(field)
+
+        if value is None or str(value).strip() == "":
+            missing_fields.append(field)
+
+    return missing_fields
+
+
+def is_intake_complete(thread_id: str):
+    """
+    Return True if all required intake fields have been collected.
+    """
+    return len(get_missing_fields(thread_id)) == 0
+
+# Track the last question asked
+thread_last_question = {}
+
+def store_last_question(thread_id: str, question: str):
+    """
+    Store the last question asked for a thread.
+    """
+    thread_last_question[thread_id] = question
+
+def get_last_question(thread_id: str):
+    """
+    Get the last question asked for a thread.
+    """
+    return thread_last_question.get(thread_id)

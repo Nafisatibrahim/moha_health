@@ -1,23 +1,23 @@
-# This file contains the code for the extraction service. It will be used to extract the symptoms from the patient's symptoms and return the extracted symptoms.
+# This file extracts structured intake information from user responses
 
-# Define the extraction function
-def extract_symptoms(text: str):
+# Import the necessary libraries
+import json
+from integrations.backboard_client import send_message, create_thread, load_prompt
 
-    text = text.lower()
 
-    if "chest pain" in text:
-        return {
-            "symptom": "chest pain",
-            "severity": 8
-        }
+def extract_intake_field(thread_id: str, user_input: str):
+    """
+    Use Gemini to extract which intake field the user response belongs to.
+    """
 
-    if "stomach" in text or "abdominal" in text:
-        return {
-            "symptom": "abdominal pain",
-            "severity": 6
-        }
+    prompt_template = load_prompt("extraction_prompt.txt")
+    prompt = prompt_template.format(user_input=user_input)
 
-    return {
-        "symptom": "unknown",
-        "severity": 3
-    }
+    temp_thread = create_thread()
+    response = send_message(temp_thread, prompt)
+
+    try:
+        parsed = json.loads(response)
+        return parsed
+    except Exception:
+        return None

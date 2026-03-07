@@ -93,11 +93,45 @@ def create_thread():
 
 # Send a message to the assistant
 def send_message(thread_id, message):
-
     response = requests.post(
         f"{BASE_URL}/threads/{thread_id}/messages",
         headers=HEADERS,
-        data={"content": message, "stream": "false"}
+        data={"content": message, "stream": "false"},
+        timeout=60,
     )
 
-    return response.json().get("content")
+    # Surface HTTP errors (rate limit, auth, etc.)
+    try:
+        response.raise_for_status()
+    except requests.RequestException as e:
+        raise RuntimeError(
+            f"Backboard API error {response.status_code}: {response.text}"
+        ) from e
+
+    data = response.json()
+
+    # Backboard may return content in different shapes
+    content = data.get("content")
+    if content is not None:
+        return content
+
+    # Some APIs return the assistant message in a "message" or "messages" array
+    msg = data.get("message")
+    if isinstance(msg, dict) and msg.get("content"):
+        return msg["content"]
+
+    messages = data.get("messages")
+    if isinstance(messages, list) and messages:
+        last = messages[-1]
+        if isinstance(last, dict) and last.get("role") == "assistant":
+            content = last.get("content")
+            if content is not None:
+                return content
+
+    # Log raw response when content is missing (helps debug API/model changes)
+    import logging
+    logging.warning(
+        "Backboard returned no 'content'. Full response: %s",
+        data,
+    )
+    return None

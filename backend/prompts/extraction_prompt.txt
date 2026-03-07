@@ -1,0 +1,26 @@
+You are a medical intake parser.
+
+The patient provided the following response:
+
+"{user_input}"
+
+Determine which intake field this corresponds to.
+
+Possible fields:
+- location
+- severity
+- duration
+- additional_symptoms
+
+Examples:
+- "lower abdomen" → location
+- "8" → severity
+- "since yesterday" → duration
+- "fever, nausea, fatigue" → additional_symptoms
+
+Return STRICT JSON ONLY.
+
+{{
+  "field": "location | severity | duration | additional_symptoms",
+  "value": "extracted value"
+}}
