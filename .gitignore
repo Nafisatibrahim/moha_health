@@ -19,3 +19,7 @@ __pycache__/
 # Binaries / build
 backend/hello_vitals
 build/
+node_modules
+
+# Unused (using client/ for frontend)
+frontend/
