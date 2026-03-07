@@ -66,7 +66,7 @@ def frontend_config():
     return {
         "cloudinary_cloud_name": os.getenv("CLOUDINARY_CLOUD_NAME", ""),
         "cloudinary_upload_preset": os.getenv("CLOUDINARY_UPLOAD_PRESET", ""),
-        "backend_base_url": "http://127.0.0.1:8000",
+        "backend_base_url": os.getenv("BACKEND_PUBLIC_URL", "http://127.0.0.1:8000"),
     }
 
 

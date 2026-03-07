@@ -1,0 +1,46 @@
+# Commit: Triage functionality (before frontend work)
+
+## What to stage (backend + docs only)
+
+git add backend/main.py
+git add backend/prompts/extraction_prompt.txt
+git add backend/services/extraction.py
+git add backend/services/triage.py
+git add backend/services/vitals.py
+git add backend/services/symptom_normalizer.py
+git add backend/services/vitals_triage.py
+git add backend/services/media.py
+git add docs/REPLIT_FRONTEND_SPEC.md
+
+## Optional: include the frontend that displays triage
+
+If you want this commit to include the working chat UI that shows triage:
+  - Either restore the previous index.html (the 184-line one with inline script), or
+  - Keep current index.html + app.js + style.css and stage them too:
+
+git add frontend/index.html frontend/app.js frontend/style.css
+
+## Do NOT stage
+
+- .env
+- frontend/index_test.html (reference only, unless you want it)
+- frontend/my-cloudinary-app/ (separate React app)
+
+## Suggested commit message
+
+Triage pipeline: intake, extraction, rule-based triage, vitals escalation
+
+- Intake: required fields, completion check, last question context
+- Extraction: Gemini with last_question + missing_fields, robust JSON parse
+- Triage: rule-based (symptom normalizer, severity/location rules)
+- Symptom normalizer: alias map (stomach/belly/tummy → abdominal pain, etc.)
+- Vitals escalation: HR > 110 or RR > 24 → HIGH, Emergency Medicine
+- POST /assess accepts optional vitals; GET /frontend-config for Cloudinary
+- Stub vitals (72/16) for demo; Presage integration ready to re-enable
+- Docs: REPLIT_FRONTEND_SPEC.md for building frontend
+
+## One-liner (backend + docs only)
+
+git add backend/main.py backend/prompts/extraction_prompt.txt backend/services/extraction.py backend/services/triage.py backend/services/vitals.py backend/services/symptom_normalizer.py backend/services/vitals_triage.py backend/services/media.py docs/REPLIT_FRONTEND_SPEC.md
+git status
+git commit -m "Triage pipeline: intake, extraction, rule-based triage, vitals escalation"

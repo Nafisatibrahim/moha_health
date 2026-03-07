@@ -25,7 +25,7 @@ Assume the backend is at a **configurable base URL** (e.g. `http://127.0.0.1:800
 }
 ```
 
-Use `cloudinary_cloud_name` and `cloudinary_upload_preset` for the Cloudinary upload widget. Do **not** hardcode these; fetch from this endpoint on load.
+Use `cloudinary_cloud_name` and `cloudinary_upload_preset` for the Cloudinary upload widget. Do **not** hardcode these; fetch from this endpoint on load. Use `backend_base_url` for all subsequent API requests (so the frontend works when deployed; backend sets this from `BACKEND_PUBLIC_URL` in production).
 
 ---
 
