@@ -3,7 +3,6 @@
 # Import the necessary libraries
 from fastapi import FastAPI
 from integrations.backboard_client import (
-    create_assistant,
     create_thread,
     send_message
 )
@@ -11,9 +10,8 @@ from integrations.backboard_client import (
 # Define the FastAPI app
 app = FastAPI()
 
-# Create the assistant and thread
-assistant_id = create_assistant()
-thread_id = create_thread(assistant_id)
+# Create a thread
+thread_id = create_thread()
 
 # Define the assess endpoint
 @app.post("/assess")
