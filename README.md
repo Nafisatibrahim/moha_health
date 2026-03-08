@@ -33,6 +33,7 @@ Think of it as a **smart front desk**: multi-agent flow, voice in/out, vitals fr
 ## 🛠 Tech stack
 
 - **Backend:** FastAPI, Python 3.11, [Google Gemini](https://ai.google.dev/) (via [Backboard](https://app.backboard.io)) for LLM orchestration, ElevenLabs (voice), Presage (vitals), Cloudinary (uploads).
+- **Database:** [Supabase](https://supabase.com) for health profiles (GET/PUT `/profile/health`).
 - **Frontend:** React, TypeScript, Vite, Tailwind, shadcn/ui, i18n, optional Auth0.
 - **Deploy:** Backend on [Railway](https://railway.app); frontend runs anywhere (e.g. [Replit](https://replit.com)) and points at the backend URL. [Tailscale](https://tailscale.com) for secure networking where needed.
 
@@ -48,7 +49,7 @@ cd moha_health
 cp .env.example .env
 ```
 
-Edit `.env`: add your **Backboard API key**, Cloudinary (if using uploads), ElevenLabs (voice), Presage (vitals), and optionally Auth0. Don’t commit `.env`.
+Edit `.env`: add your **Backboard API key**, Cloudinary (if using uploads), ElevenLabs (voice), Presage (vitals), **Supabase** (SUPABASE_URL, SUPABASE_KEY for health profiles), and optionally Auth0. Don’t commit `.env`.
 
 ### 2. Backend (local)
 

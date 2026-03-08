@@ -81,12 +81,14 @@ def root():
 
 @app.get("/profile/health")
 def get_profile_health(patient_id: str = ""):
-    """Get stored health profile for the given patient_id (e.g. Auth0 user.sub)."""
+    """Get stored health profile for the given patient_id (e.g. Auth0 user.sub). Returns 404 if not found."""
     pid = (patient_id or "").strip()
     if not pid:
         raise HTTPException(status_code=400, detail="patient_id is required")
     profile = get_health_profile(pid)
-    return {"health_profile": profile if profile else {}}
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Health profile not found")
+    return {"health_profile": profile}
 
 
 @app.put("/profile/health")
