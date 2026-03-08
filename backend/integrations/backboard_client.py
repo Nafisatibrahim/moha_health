@@ -173,23 +173,28 @@ def upload_document_to_thread(thread_id: str, image_url: str) -> bool:
 
 
 # Send a message to the assistant
-def send_message(thread_id, message):
-    response = requests.post(
+def send_message(thread_id: str, message: str):
+    payload = {
+        "role": "user",
+        "content": message,
+        "stream": False,
+        "model": f"{BACKBOARD_LLM_PROVIDER}/{BACKBOARD_LLM_MODEL_NAME}",
+    }
+    resp = requests.post(
         f"{BASE_URL}/threads/{thread_id}/messages",
         headers=HEADERS,
-        data={"content": message, "stream": "false"},
+        json=payload,
         timeout=60,
     )
 
-    # Surface HTTP errors (rate limit, auth, etc.)
     try:
-        response.raise_for_status()
+        resp.raise_for_status()
     except requests.RequestException as e:
         raise RuntimeError(
-            f"Backboard API error {response.status_code}: {response.text}"
+            f"Backboard API error {resp.status_code}: {resp.text}"
         ) from e
 
-    data = response.json()
+    data = resp.json()
 
     # Backboard may return content in different shapes
     content = data.get("content")

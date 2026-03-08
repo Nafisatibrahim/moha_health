@@ -1,6 +1,7 @@
 # This file contains the code for the main application. It will be used to run the application.
 
 # Import the necessary libraries
+import logging
 import os
 import tempfile
 import time
@@ -47,8 +48,10 @@ from backend.services.knowledge import retrieve as knowledge_retrieve
 from backend.services.vitals_triage import escalate_with_vitals
 from backend.services.extraction import extract_intake_fields
 from backend.services.vitals import get_vitals_from_video
-from backend.services.voice import generate_voice, transcribe_audio
+from backend.services.voice import generate_voice, transcribe_audio, ElevenLabsTranscribeError
 from backend.services.health_profile_store import get as get_health_profile, set_profile as set_health_profile
+
+logger = logging.getLogger(__name__)
 
 # Add CORS middleware
 app = FastAPI()
@@ -141,6 +144,7 @@ def speak(data: dict):
     except HTTPException:
         raise
     except Exception as e:
+        logger.exception("ElevenLabs TTS failed: %s", e)
         err_str = str(e).lower()
         if "quota" in err_str or "quota_exceeded" in err_str:
             raise HTTPException(
@@ -152,26 +156,40 @@ def speak(data: dict):
 
 @app.post("/transcribe")
 async def transcribe(
-    audio: UploadFile = File(...),
+    audio: UploadFile = File(..., description="Audio file (e.g. recording.webm from browser)"),
     language_code: str | None = None,
 ):
     """Accept an audio file (e.g. webm from browser), return transcribed text.
-    Optional language_code (e.g. 'en', 'fr') hints the STT model to avoid wrong-language output."""
+    Frontend must send multipart form with field name 'audio'. Optional language_code (e.g. 'en', 'fr') hints the STT model."""
     import asyncio
     try:
         body = await audio.read()
         if not body:
             raise HTTPException(status_code=400, detail="Empty audio file")
         from io import BytesIO
-        text = await asyncio.to_thread(
+        filename = audio.filename or "audio.webm"
+        text, request_id = await asyncio.to_thread(
             transcribe_audio,
             BytesIO(body),
-            audio.filename or "audio.webm",
+            filename,
             language_code,
         )
-        return {"text": text}
+        return {"text": text, "request_id": request_id}
+    except HTTPException:
+        raise
+    except ElevenLabsTranscribeError as e:
+        logger.exception("ElevenLabs transcription failed request_id=%s: %s", e.request_id, e)
+        msg = str(e)
+        if e.request_id:
+            msg += f" (Request ID: {e.request_id})"
+        raise HTTPException(status_code=500, detail=msg)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Transcription error: {str(e)}")
+        logger.exception("ElevenLabs transcription failed: %s", e)
+        msg = str(e)
+        request_id = getattr(e, "request_id", None)
+        if request_id:
+            msg += f" (Request ID: {request_id})"
+        raise HTTPException(status_code=500, detail=msg)
 
 
 @app.get("/frontend-config")

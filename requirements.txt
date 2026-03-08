@@ -5,5 +5,6 @@ python-dotenv
 python-multipart
 presage_technologies
 cloudinary
-elevenlabs
+# Pin to avoid silent breakage from SDK changes (TTS/STT)
+elevenlabs>=1.0,<3
 supabase
