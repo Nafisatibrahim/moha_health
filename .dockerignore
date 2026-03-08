@@ -1,0 +1,19 @@
+# Ignore frontend and dev files so Docker build is fast and small
+client/
+node_modules/
+.git/
+.github/
+.vscode/
+*.md
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+*.log
+.DS_Store
