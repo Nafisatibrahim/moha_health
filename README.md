@@ -17,14 +17,8 @@
 
 ## 🎬 Demo
 
-<!-- Replace the link below with your demo video (e.g. Loom, YouTube) when ready -->
 <p align="center">
-  <a href="https://moha-health.replit.app">
-    <img src="assets/Moya_Health_logo.png" alt="Watch demo" width="480" />
-  </a>
-</p>
-<p align="center">
-  <em>Demo video coming soon.</em> Try the <a href="https://moha-health.replit.app">live app</a> in the meantime.
+  <a href="https://moha-health.replit.app">Try the live app</a> — describe a symptom, complete an assessment, then check your Profile for history.
 </p>
 
 ---
@@ -36,8 +30,6 @@
 - **Innovation:** Multi-agent flow (intake → specialist → triage), optional voice I/O, vitals from video, and persisted health profile + assessment history (Supabase).
 - **Impact:** Reduces anxiety and streamlines the first step before a real clinician; report can be shared or downloaded.
 - **Demo:** Sign in → describe a symptom → answer a few questions → get triage and report → see history on Profile. [Live app](https://moha-health.replit.app) · Backend: Railway.
-
-**60s demo script:** *"I'm [name]. This is Moha Health. In Canada, wait times are long and people sit for hours. We built an AI intake: you describe how you feel, get guided questions, then a triage and report. If you're logged in, it's saved in your profile. Here's the flow…"* → do one full assessment, then open Profile.
 
 ---
 
