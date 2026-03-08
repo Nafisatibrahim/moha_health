@@ -1,0 +1,10 @@
+# Ensure Python and pip are available (Node is still detected; this adds Python so pip exists).
+[phases.setup]
+aptPkgs = ["python3", "python3-pip"]
+
+# Override install: only run pip (skip npm ci so build is fast and we use Python).
+[phases.install]
+cmds = ["pip3 install --break-system-packages -r requirements.txt"]
+
+[start]
+cmd = "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT}"
