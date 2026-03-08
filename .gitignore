@@ -9,34 +9,55 @@ COMMIT_TRIAGE.txt
 
 # Virtual environment
 venv/
+.venv/
+env/
 
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
+*.egg-info/
+.eggs/
+.mypy_cache/
+.ruff_cache/
 
 # Cursor / editor
 .cursor/
 .cursorrules
 
-# IDE (optional: remove if you want to share .vscode)
+# IDE
 .vscode/
+.idea/
 
 # Binaries / build
 backend/hello_vitals
 build/
 dist/
-node_modules
+node_modules/
+client/dist/
+
+# Vite / Node
+.vite/
+
+# Local test / scratch (not part of app)
+backboard_test/
+presage_test/
 
 # Unused (using client/ for frontend)
 frontend/
 
-# OS / editor
+# Docs (markdown only, not needed in repo)
+docs/
+
+# OS
 .DS_Store
 Thumbs.db
-*.log
 
-# Test / coverage (optional)
+# Logs
+*.log
+debug*.log
+
+# Test / coverage
 .coverage
 htmlcov/
 .pytest_cache/
