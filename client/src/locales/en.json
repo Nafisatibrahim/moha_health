@@ -107,6 +107,8 @@
     "vitalsDetected": "Vitals detected — Heart Rate: {{hr}} bpm, Respiration: {{rr}} breaths/min",
     "assessmentCompleteTriage": "Assessment complete. Based on the information you've provided, here is your triage result:",
     "assessmentCompleteDefault": "Assessment complete. Here is your triage result:",
+    "transcribing": "Transcribing…",
+    "transcriptionTimeout": "Transcription took too long. Try a shorter message (under 15 seconds).",
     "transcriptionFailed": "Transcription failed: {{detail}}",
     "couldNotTranscribe": "Could not transcribe recording.",
     "microphoneDenied": "Microphone access denied or unavailable.",

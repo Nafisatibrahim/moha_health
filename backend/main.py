@@ -3,6 +3,7 @@
 # Import the necessary libraries
 import os
 import tempfile
+import time
 import requests
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, UploadFile, File, HTTPException
@@ -156,15 +157,17 @@ async def transcribe(
 ):
     """Accept an audio file (e.g. webm from browser), return transcribed text.
     Optional language_code (e.g. 'en', 'fr') hints the STT model to avoid wrong-language output."""
+    import asyncio
     try:
         body = await audio.read()
         if not body:
             raise HTTPException(status_code=400, detail="Empty audio file")
         from io import BytesIO
-        text = transcribe_audio(
+        text = await asyncio.to_thread(
+            transcribe_audio,
             BytesIO(body),
             audio.filename or "audio.webm",
-            language_code=language_code,
+            language_code,
         )
         return {"text": text}
     except Exception as e:
@@ -317,6 +320,7 @@ def assess(data: dict):
         spec_tid = get_specialist_thread_id(thread_id)
         if spec_tid:
             upload_document_to_thread(spec_tid, symptom_image_url)
+        time.sleep(5)  # give Backboard 3–5 s to index document before send_message
 
     # Get the collected intake data
     intake_data = get_intake_data(thread_id)
@@ -422,6 +426,7 @@ def assess(data: dict):
             set_phase(thread_id, "specialist")
             if symptom_image_url:
                 upload_document_to_thread(spec_thread_id, symptom_image_url)
+                time.sleep(5)  # give Backboard time to index before send_message
 
             prompt_name = (
                 "dermatologist_prompt.txt"

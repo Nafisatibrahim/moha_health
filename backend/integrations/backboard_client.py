@@ -1,5 +1,11 @@
 # This file contains the code for the Backboard client.
 # It handles communication with the Backboard API and loads prompts.
+#
+# WHERE IS THE ASSISTANT?
+# - An "assistant" is the AI config (name, system_prompt, llm_provider, llm_model_name) in Backboard.
+# - It is CREATED here: get_or_create_assistant() does POST /assistants with the payload (see payload below).
+# - You GET the assistant ID from: (1) Backboard dashboard, or (2) after creation, the code writes it to .env (BACKBOARD_ASSISTANT_ID, etc.).
+# - You CHANGE the model by: (1) setting BACKBOARD_LLM_PROVIDER and BACKBOARD_LLM_MODEL_NAME in .env, and (2) removing existing BACKBOARD_ASSISTANT_ID (and _DERMATOLOGY, etc.) so new Gemini assistants are created; or change the model in Backboard dashboard for existing assistants.
 
 # Import the necessary libraries
 import os
@@ -13,6 +19,9 @@ load_dotenv()
 API_KEY = os.getenv("BACKBOARD_API_KEY")
 BASE_URL = os.getenv("BACKBOARD_BASE_URL", "https://app.backboard.io/api")
 ASSISTANT_ID = os.getenv("BACKBOARD_ASSISTANT_ID")
+# Gemini in Backboard: llm_provider="google", llm_model_name e.g. "gemini-2.5-flash" or "gemini-2.5-pro"
+BACKBOARD_LLM_PROVIDER = os.getenv("BACKBOARD_LLM_PROVIDER", "google")
+BACKBOARD_LLM_MODEL_NAME = os.getenv("BACKBOARD_LLM_MODEL_NAME", "gemini-2.5-flash")
 
 # Per-role assistant IDs (general, dermatology, dental, cardiology)
 ASSISTANT_IDS = {}
@@ -37,6 +46,9 @@ def get_or_create_assistant(role: str = "general"):
     """
     Get or create a Backboard assistant for the given role.
     role: "general", "dermatology", or "dental".
+    Uses BACKBOARD_LLM_PROVIDER and BACKBOARD_LLM_MODEL_NAME when creating new assistants (default: Google gemini-2.5-flash).
+    If BACKBOARD_ASSISTANT_ID or BACKBOARD_ASSISTANT_ID_<ROLE> are set, those existing IDs are used
+    (they keep whatever model they were created with). Remove those env vars to force creating new Gemini assistants.
     """
     global ASSISTANT_IDS, ASSISTANT_ID
 
@@ -45,12 +57,23 @@ def get_or_create_assistant(role: str = "general"):
         existing = os.getenv(env_key)
         if role == "general" and not existing and ASSISTANT_ID:
             existing = ASSISTANT_ID
-        if existing:
+        force_new = os.getenv("FORCE_CREATE_NEW_BACKBOARD_ASSISTANTS", "").strip().lower() in ("1", "true", "yes")
+        if existing and not force_new:
             ASSISTANT_IDS[role] = existing
             return existing
 
         if role == "general":
-            system_prompt = load_prompt("general_physician_prompt.txt")
+            # Use a static system prompt. The full template (with health_profile, intake_data, etc.) is
+            # filled in main.py and sent as the user message each time. Backboard must not receive
+            # a template with {placeholders} or it will try to fill them and fail (only "messages" received).
+            system_prompt = (
+                "You are a warm, professional general physician assistant in hospital intake. "
+                "Your role is NOT to provide medical advice; you collect information for triage. "
+                "You will receive a detailed user message containing: patient health profile, previous visits, "
+                "primary symptom, information already collected, missing fields, your last question, and the patient's response. "
+                "Acknowledge what the patient said. Ask exactly ONE question only if something is still missing. "
+                "Do not repeat questions. Do not give treatment advice. Return only your reply to the patient (no labels or JSON)."
+            )
             name = "HackCanada-General"
         elif role == "dermatology":
             system_prompt = (
@@ -75,13 +98,18 @@ def get_or_create_assistant(role: str = "general"):
             )
             name = "HackCanada-Cardiology"
         else:
-            system_prompt = load_prompt("general_physician_prompt.txt")
+            system_prompt = (
+                "You are a warm, professional general physician assistant in hospital intake. "
+                "Collect information for triage. You will receive context in the user message. "
+                "Ask one question at a time. Do not give medical advice. Return only your reply (no labels or JSON)."
+            )
             name = f"HackCanada-{role.title()}"
 
         payload = {
             "name": name,
             "system_prompt": system_prompt,
-            "model": "gemini-2.5-pro",
+            "llm_provider": BACKBOARD_LLM_PROVIDER,
+            "llm_model_name": BACKBOARD_LLM_MODEL_NAME,
             "tools": [],
         }
 

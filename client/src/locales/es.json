@@ -107,6 +107,8 @@
     "vitalsDetected": "Constantes detectadas — Frecuencia cardíaca: {{hr}} lpm, Respiración: {{rr}}/min",
     "assessmentCompleteTriage": "Evaluación completada. Aquí está tu resultado de triaje:",
     "assessmentCompleteDefault": "Evaluación completada. Aquí está tu resultado de triaje:",
+    "transcribing": "Transcribiendo…",
+    "transcriptionTimeout": "La transcripción tardó demasiado. Prueba un mensaje más corto (menos de 15 segundos).",
     "transcriptionFailed": "Error de transcripción: {{detail}}",
     "couldNotTranscribe": "No se pudo transcribir la grabación.",
     "microphoneDenied": "Acceso al micrófono denegado o no disponible.",

@@ -186,6 +186,7 @@ export default function Intake() {
     return saved === "voice" || saved === "text" ? saved : "text";
   });
   const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const [speakError, setSpeakError] = useState<string | null>(null);
   const [selectedVoiceId, setSelectedVoiceId] = useState<string>(() => {
     if (typeof window === "undefined") return VOICE_OPTIONS[0].id;
@@ -446,6 +447,9 @@ export default function Intake() {
           setIsRecording(false);
           return;
         }
+        setIsTranscribing(true);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 45000);
         try {
           const form = new FormData();
           form.append("audio", blob, "recording.webm");
@@ -454,6 +458,7 @@ export default function Intake() {
           const res = await fetch(url, {
             method: "POST",
             body: form,
+            signal: controller.signal,
           });
           if (!res.ok) {
             const err = await res.json().catch(() => ({}));
@@ -467,11 +472,17 @@ export default function Intake() {
           } else {
             if (outputModeRef.current === "voice") startRecordingRef.current();
           }
-        } catch {
-          addMessage("system", t("intake.couldNotTranscribe"));
+        } catch (err) {
+          if (err instanceof Error && err.name === "AbortError") {
+            addMessage("system", t("intake.transcriptionTimeout"));
+          } else {
+            addMessage("system", t("intake.couldNotTranscribe"));
+          }
           if (outputModeRef.current === "voice") startRecordingRef.current();
         } finally {
+          clearTimeout(timeoutId);
           setIsRecording(false);
+          setIsTranscribing(false);
         }
       };
       rec.start(200);
@@ -1169,26 +1180,36 @@ export default function Intake() {
                     variant={isRecording ? "destructive" : "outline"}
                     size="icon"
                     onClick={isRecording ? stopRecording : startRecording}
-                    disabled={!sessionStarted || isLoading || !!triage}
-                    title={isRecording ? t("intake.stopRecording") : t("intake.recordVoiceMessage")}
-                    aria-label={isRecording ? t("intake.stopRecording") : t("intake.recordVoiceMessage")}
+                    disabled={!sessionStarted || isLoading || !!triage || isTranscribing}
+                    title={isTranscribing ? t("intake.transcribing") : isRecording ? t("intake.stopRecording") : t("intake.recordVoiceMessage")}
+                    aria-label={isTranscribing ? t("intake.transcribing") : isRecording ? t("intake.stopRecording") : t("intake.recordVoiceMessage")}
                     data-testid="button-record-voice"
                   >
-                    {isRecording ? (
+                    {isTranscribing ? (
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                    ) : isRecording ? (
                       <Square className="h-4 w-4" aria-hidden />
                     ) : (
                       <Mic className="h-4 w-4" aria-hidden />
                     )}
                   </Button>
-                  <Input
-                    ref={inputRef}
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    placeholder={triage ? t("intake.assessmentComplete") : t("intake.placeholderDescribe")}
-                    disabled={!sessionStarted || isLoading || !!triage}
-                    className="flex-1"
-                    data-testid="input-chat-message"
-                  />
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    {isTranscribing && (
+                      <p className="flex items-center gap-2 text-xs text-muted-foreground" role="status">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                        {t("intake.transcribing")}
+                      </p>
+                    )}
+                    <Input
+                      ref={inputRef}
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      placeholder={triage ? t("intake.assessmentComplete") : t("intake.placeholderDescribe")}
+                      disabled={!sessionStarted || isLoading || !!triage || isTranscribing}
+                      className="flex-1"
+                      data-testid="input-chat-message"
+                    />
+                  </div>
                   <Button
                     type="submit"
                     disabled={!sessionStarted || !inputValue.trim() || isLoading || !!triage}
