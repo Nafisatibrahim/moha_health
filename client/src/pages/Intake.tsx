@@ -465,7 +465,7 @@ export default function Intake() {
             addMessage("system", t("intake.transcriptionFailed", { detail: (err as { detail?: string }).detail || String(res.status) }));
             return;
           }
-          const data = (await res.json()) as { text?: string };
+          const data = (await res.json()) as { text?: string; request_id?: string };
           const transcribed = (data.text || "").trim();
           if (transcribed) {
             handleSendRef.current?.(transcribed);
@@ -518,8 +518,9 @@ export default function Intake() {
             const sustainedMs = now - (speechStartRef.current ?? now);
             if (sustainedMs >= SUSTAINED_SPEECH_MS) silenceStartRef.current = null;
           } else {
+            const prevSpeechStart = speechStartRef.current;
             speechStartRef.current = null;
-            const speechDuration = speechStartRef.current !== null ? now - speechStartRef.current : 0;
+            const speechDuration = prevSpeechStart !== null ? now - prevSpeechStart : 0;
             if (speechDuration >= MIN_SPEECH_MS) {
               if (silenceStartRef.current === null) silenceStartRef.current = now;
               if (now - (silenceStartRef.current || now) >= SILENCE_DURATION_MS) {
