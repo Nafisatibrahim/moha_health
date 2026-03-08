@@ -25,6 +25,7 @@ import {
   FileText,
   Mic,
   Square,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 declare global {
   interface Window {
@@ -140,6 +142,7 @@ function getUrgencyColor(urgency: string) {
 
 export default function Intake() {
   const { t, i18n } = useTranslation();
+  const { toast } = useToast();
   const patientId = useContext(Auth0UserContext);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -620,7 +623,21 @@ export default function Intake() {
           }),
         });
 
-        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        if (!res.ok) {
+          let detail = `Server error: ${res.status}`;
+          try {
+            const errBody = await res.json() as { detail?: string };
+            if (errBody?.detail) detail = String(errBody.detail);
+          } catch {
+            /* ignore */
+          }
+          const msg = t("intake.errorSomethingWrong", { message: detail });
+          toast({ title: t("common.error"), description: detail, variant: "destructive" });
+          addMessage("system", msg);
+          setMockMode(true);
+          if (outputMode === "voice") startRecordingRef.current();
+          return;
+        }
         const data = await res.json();
         setLastResponse(data);
         const specialist = (data.specialist as string) || "";
@@ -647,6 +664,7 @@ export default function Intake() {
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Something went wrong";
+      toast({ title: t("common.error"), description: errorMsg, variant: "destructive" });
       addMessage("system", t("intake.errorSomethingWrong", { message: errorMsg }));
       setMockMode(true);
       if (outputMode === "voice") startRecordingRef.current();
@@ -1175,8 +1193,9 @@ export default function Intake() {
                     type="submit"
                     disabled={!sessionStarted || !inputValue.trim() || isLoading || !!triage}
                     data-testid="button-send-message"
+                    aria-label={isLoading ? t("common.loading") : t("common.send")}
                   >
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />}
                     <span className="sr-only sm:not-sr-only sm:ml-1">{t("common.send")}</span>
                   </Button>
                 </form>
@@ -1426,6 +1445,7 @@ export default function Intake() {
                                 variant="outline"
                                 size="sm"
                                 data-testid="button-copy-report"
+                                aria-label={reportCopied ? t("intake.reportCopied") : t("intake.copyReport")}
                                 onClick={async () => {
                                   try {
                                     await navigator.clipboard.writeText(report);
@@ -1437,6 +1457,25 @@ export default function Intake() {
                                 }}
                               >
                                 {reportCopied ? t("intake.reportCopied") : t("intake.copyReport")}
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                data-testid="button-download-report"
+                                aria-label={t("intake.downloadReport")}
+                                onClick={() => {
+                                  const blob = new Blob([report], { type: "text/plain;charset=utf-8" });
+                                  const url = URL.createObjectURL(blob);
+                                  const a = document.createElement("a");
+                                  a.href = url;
+                                  a.download = `moha-health-report-${new Date().toISOString().slice(0, 10)}.txt`;
+                                  a.click();
+                                  URL.revokeObjectURL(url);
+                                }}
+                              >
+                                <Download className="mr-1 h-3.5 w-3.5" />
+                                {t("intake.downloadReport")}
                               </Button>
                               {reportJson && (
                                 <Button

@@ -40,7 +40,8 @@ from backend.services.intake import (
 from backend.services.routing import route_specialist, parse_router_response, ROUTER_VALID_SPECIALTIES
 from backend.services.triage import run_triage
 from backend.services.report import build_doctor_report
-from backend.services.patient_memory import format_previous_visits_for_prompt, append_visit
+from backend.services.patient_memory import format_previous_visits_for_prompt
+from backend.services.assessment_store import save_assessment as save_assessment_to_store
 from backend.services.knowledge import retrieve as knowledge_retrieve
 from backend.services.vitals_triage import escalate_with_vitals
 from backend.services.extraction import extract_intake_fields
@@ -75,6 +76,7 @@ def root():
             "POST /vitals/from-url": "Vitals from video URL (e.g. Cloudinary)",
             "GET /profile/health": "Get health profile by patient_id",
             "PUT /profile/health": "Save health profile for patient_id",
+            "GET /profile/assessments": "Get assessment history by patient_id",
         },
     }
 
@@ -106,6 +108,17 @@ def put_profile_health(data: dict):
         return {"health_profile": stored}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/profile/assessments")
+def get_profile_assessments(patient_id: str = "", limit: int = 50):
+    """Get assessment history for the given patient_id (e.g. Auth0 user.sub). Newest first."""
+    pid = (patient_id or "").strip()
+    if not pid:
+        raise HTTPException(status_code=400, detail="patient_id is required")
+    from backend.services.assessment_store import get_assessments
+    assessments = get_assessments(pid, limit=min(limit, 100))
+    return {"assessments": assessments}
 
 
 @app.post("/speak")
@@ -493,13 +506,16 @@ def assess(data: dict):
     )
     triage_result["confidence"] = report_dict.get("ai_confidence_score", 0.8)
     if patient_id:
-        append_visit(
-            patient_id,
+        save_assessment_to_store(
+            patient_id=patient_id,
+            session_id=thread_id,
             primary_symptom=intake_data.get("primary_symptom", ""),
             duration=intake_data.get("duration", ""),
             severity=str(intake_data.get("severity", "")),
             specialist=get_specialist(thread_id) or "",
             urgency=triage_result.get("urgency", ""),
+            report=report_text,
+            report_json=report_dict,
         )
     return {
         "intake_data": intake_data,

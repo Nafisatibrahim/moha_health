@@ -103,9 +103,9 @@ export default function Home() {
               className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
             >
               <Link href="/intake">
-                <Button size="lg" className="h-12 px-8 text-base gap-2 shadow-lg shadow-primary/25" data-testid="button-hero-start-assessment">
+                <Button size="lg" className="h-12 px-8 text-base gap-2 shadow-lg shadow-primary/25 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" data-testid="button-hero-start-assessment" aria-label={t("home.startAssessment")}>
                   {t("home.startAssessment")}
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4" aria-hidden />
                 </Button>
               </Link>
               <a href="#how-it-works">

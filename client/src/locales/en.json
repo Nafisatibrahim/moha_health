@@ -3,7 +3,8 @@
     "send": "Send",
     "loading": "Analyzing...",
     "openMenu": "Open menu",
-    "back": "Back"
+    "back": "Back",
+    "error": "Error"
   },
   "nav": {
     "brand": "Lumina Health",
@@ -75,6 +76,7 @@
     "doctorReport": "Doctor report",
     "copyReport": "Copy report",
     "copyReportJson": "Copy JSON",
+    "downloadReport": "Download report",
     "reportCopied": "Copied!",
     "copyReportFailed": "Copy failed",
     "aiConfidence": "AI confidence",
@@ -226,7 +228,8 @@
     "history": "Assessment history",
     "historyDesc": "Your past triage assessments will appear here.",
     "historyPlaceholder": "No assessments yet",
-    "historyPlaceholderHint": "Complete an intake to see your history here."
+    "historyPlaceholderHint": "Complete an intake to see your history here.",
+    "viewReport": "View report"
   },
   "contact": {
     "title": "Contact Us",

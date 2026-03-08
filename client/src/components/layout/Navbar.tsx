@@ -168,7 +168,7 @@ export default function Navbar() {
           </DropdownMenu>
           {auth0Enabled && <NavAuthButtons />}
           <Link href="/intake">
-            <Button data-testid="button-start-assessment" size="sm">
+            <Button data-testid="button-start-assessment" size="sm" aria-label={t("nav.startAssessment")}>
               {t("nav.startAssessment")}
             </Button>
           </Link>
@@ -225,7 +225,7 @@ export default function Navbar() {
               <div className="mt-4 px-3">
                 <SheetClose asChild>
                   <Link href="/intake">
-                    <Button className="w-full" data-testid="button-mobile-start-assessment">
+                    <Button className="w-full" data-testid="button-mobile-start-assessment" aria-label={t("nav.startAssessment")}>
                       {t("nav.startAssessment")}
                     </Button>
                   </Link>

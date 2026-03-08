@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { User, LogIn, LogOut, ClipboardList, Stethoscope, FileText } from "lucide-react";
+import { User, LogIn, LogOut, ClipboardList, Stethoscope, FileText, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 
@@ -48,6 +48,9 @@ function ProfileContent() {
   const [healthProfile, setHealthProfile] = useState<HealthProfileShape>(() => ({ ...emptyHealthProfile }));
   const [healthProfileLoading, setHealthProfileLoading] = useState(false);
   const [healthProfileSaving, setHealthProfileSaving] = useState(false);
+  const [assessments, setAssessments] = useState<AssessmentItem[]>([]);
+  const [assessmentsLoading, setAssessmentsLoading] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated || !user || welcomeShownRef.current) return;
@@ -76,7 +79,15 @@ function ProfileContent() {
     if (!isAuthenticated || !user?.sub) return;
     setHealthProfileLoading(true);
     fetch(`${baseUrl}/profile/health?patient_id=${encodeURIComponent(user.sub)}`)
-      .then((r) => (r.ok ? r.json() : { health_profile: {} }))
+      .then((r) => {
+        if (!r.ok) {
+          r.json().catch(() => ({})).then((body: { detail?: string }) => {
+            toast({ title: t("common.error"), description: body?.detail ?? r.statusText, variant: "destructive" });
+          });
+          return Promise.resolve({ health_profile: {} as Record<string, string> });
+        }
+        return r.json() as Promise<{ health_profile?: Record<string, string> }>;
+      })
       .then((data: { health_profile?: Record<string, string> }) => {
         const p = data?.health_profile;
         if (p && typeof p === "object") {
@@ -93,8 +104,32 @@ function ProfileContent() {
           });
         }
       })
-      .catch(() => {})
+      .catch(() => toast({ title: t("common.error"), description: "Could not load health profile", variant: "destructive" }))
       .finally(() => setHealthProfileLoading(false));
+  }, [isAuthenticated, user?.sub, baseUrl]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.sub) return;
+    setAssessmentsLoading(true);
+    fetch(`${baseUrl}/profile/assessments?patient_id=${encodeURIComponent(user.sub)}`)
+      .then((r) => {
+        if (!r.ok) {
+          r.json().catch(() => ({})).then((body: { detail?: string }) => {
+            toast({ title: t("common.error"), description: body?.detail ?? r.statusText, variant: "destructive" });
+          });
+          return Promise.resolve({ assessments: [] as AssessmentItem[] });
+        }
+        return r.json() as Promise<{ assessments?: AssessmentItem[] }>;
+      })
+      .then((data: { assessments?: AssessmentItem[] }) => {
+        const list = Array.isArray(data?.assessments) ? data.assessments : [];
+        setAssessments(list);
+      })
+      .catch(() => {
+        toast({ title: t("common.error"), description: "Could not load assessment history", variant: "destructive" });
+        setAssessments([]);
+      })
+      .finally(() => setAssessmentsLoading(false));
   }, [isAuthenticated, user?.sub, baseUrl]);
 
   const handleSaveHealthProfile = () => {
@@ -296,19 +331,93 @@ function ProfileContent() {
             <CardDescription>{t("profile.historyDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="rounded-lg border border-dashed border-muted-foreground/25 bg-muted/20 py-12 text-center">
-              <Stethoscope className="mx-auto h-12 w-12 text-muted-foreground/50" />
-              <p className="mt-3 text-sm font-medium text-muted-foreground">
-                {t("profile.historyPlaceholder")}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground/80">{t("profile.historyPlaceholderHint")}</p>
-              <Link href="/intake">
-                <Button variant="outline" className="mt-4 gap-2" data-testid="profile-start-assessment">
-                  <Stethoscope className="h-4 w-4" />
-                  {t("nav.startAssessment")}
-                </Button>
-              </Link>
-            </div>
+            {assessmentsLoading ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">{t("common.loading")}</p>
+            ) : assessments.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-muted-foreground/25 bg-muted/20 py-12 text-center">
+                <Stethoscope className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                <p className="mt-3 text-sm font-medium text-muted-foreground">
+                  {t("profile.historyPlaceholder")}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground/80">{t("profile.historyPlaceholderHint")}</p>
+                <Link href="/intake">
+                  <Button variant="outline" className="mt-4 gap-2" data-testid="profile-start-assessment">
+                    <Stethoscope className="h-4 w-4" />
+                    {t("nav.startAssessment")}
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {assessments.map((a) => {
+                  const id = (a.id ?? a.session_id) as string;
+                  const isExpanded = expandedId === id;
+                  const dateStr = a.created_at
+                    ? new Date(a.created_at).toLocaleDateString(undefined, {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })
+                    : "";
+                  return (
+                    <div
+                      key={id}
+                      className="rounded-lg border bg-card p-3 text-card-foreground shadow-sm"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium text-foreground">
+                            {a.primary_symptom || t("profile.historyPlaceholder")}
+                          </p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {dateStr}
+                            {a.specialist ? ` · ${a.specialist}` : ""}
+                          </p>
+                        </div>
+                        <span
+                          className={`shrink-0 rounded px-2 py-0.5 text-xs font-medium ${
+                            a.urgency === "HIGH"
+                              ? "bg-destructive/15 text-destructive"
+                              : a.urgency === "MEDIUM"
+                                ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                                : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {a.urgency || "—"}
+                        </span>
+                      </div>
+                      {a.report?.trim() && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="mt-2 h-8 gap-1 text-xs"
+                            onClick={() => setExpandedId(isExpanded ? null : id)}
+                          >
+                            {isExpanded ? (
+                              <ChevronUp className="h-3.5 w-3.5" />
+                            ) : (
+                              <ChevronDown className="h-3.5 w-3.5" />
+                            )}
+                            {t("profile.viewReport")}
+                          </Button>
+                          {isExpanded && (
+                            <div className="mt-2 rounded border bg-muted/30 p-3 text-xs whitespace-pre-wrap text-muted-foreground">
+                              {a.report}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+                <Link href="/intake">
+                  <Button variant="outline" className="w-full gap-2" data-testid="profile-start-assessment">
+                    <Stethoscope className="h-4 w-4" />
+                    {t("nav.startAssessment")}
+                  </Button>
+                </Link>
+              </div>
+            )}
           </CardContent>
         </Card>
       </section>

@@ -1,22 +1,19 @@
-# In-memory patient visit history for stateful context (Phase 1).
-# Keyed by patient_id (e.g. Auth0 user.sub). Replace with DB in Phase 2.
+# Previous visits for prompt context: read from Supabase (assessment_store). In-memory fallback no longer used.
 
-MAX_VISITS_PER_PATIENT = 5
-
-_patient_visits: dict[str, list[dict]] = {}
-
-
-def get_previous_visits(patient_id: str, last_n: int = 2) -> list[dict]:
-    """Return the last N visit summaries for the patient, or empty list."""
-    if not patient_id or not patient_id.strip():
+def _get_visits_from_store(patient_id: str, last_n: int) -> list[dict]:
+    """Return last N assessments (chronological order: oldest first) for prompt formatting."""
+    try:
+        from backend.services.assessment_store import get_assessments
+        rows = get_assessments(patient_id, limit=last_n)
+        # get_assessments returns newest first; reverse so oldest is first for "Visit 1, Visit 2, ..."
+        return list(reversed(rows)) if rows else []
+    except Exception:
         return []
-    visits = _patient_visits.get(patient_id.strip(), [])
-    return visits[-last_n:] if last_n else visits
 
 
 def format_previous_visits_for_prompt(patient_id: str, last_n: int = 2) -> str:
-    """Format previous visits as a string for injection into prompts."""
-    visits = get_previous_visits(patient_id, last_n=last_n)
+    """Format previous visits as a string for injection into prompts (from Supabase assessment history)."""
+    visits = _get_visits_from_store(patient_id, last_n)
     if not visits:
         return ""
     parts = []
@@ -37,28 +34,3 @@ def format_previous_visits_for_prompt(patient_id: str, last_n: int = 2) -> str:
             line += f", triage={urg}"
         parts.append(line)
     return "Previous visit(s): " + "; ".join(parts)
-
-
-def append_visit(
-    patient_id: str,
-    primary_symptom: str = "",
-    duration: str = "",
-    severity: str = "",
-    specialist: str = "",
-    urgency: str = "",
-) -> None:
-    """Append a short visit summary for the patient. Keeps only last MAX_VISITS_PER_PATIENT."""
-    if not patient_id or not patient_id.strip():
-        return
-    pid = patient_id.strip()
-    if pid not in _patient_visits:
-        _patient_visits[pid] = []
-    _patient_visits[pid].append({
-        "primary_symptom": primary_symptom,
-        "duration": duration,
-        "severity": severity,
-        "specialist": specialist,
-        "urgency": urgency,
-    })
-    if len(_patient_visits[pid]) > MAX_VISITS_PER_PATIENT:
-        _patient_visits[pid] = _patient_visits[pid][-MAX_VISITS_PER_PATIENT:]

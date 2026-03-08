@@ -3,7 +3,8 @@
     "send": "Envoyer",
     "loading": "Analyse en cours...",
     "openMenu": "Ouvrir le menu",
-    "back": "Retour"
+    "back": "Retour",
+    "error": "Erreur"
   },
   "nav": {
     "brand": "Lumina Health",
@@ -75,6 +76,7 @@
     "doctorReport": "Rapport médecin",
     "copyReport": "Copier le rapport",
     "copyReportJson": "Copier JSON",
+    "downloadReport": "Télécharger le rapport",
     "reportCopied": "Copié !",
     "copyReportFailed": "Échec de la copie",
     "aiConfidence": "Confiance IA",
@@ -226,7 +228,8 @@
     "history": "Historique des évaluations",
     "historyDesc": "Vos anciens triages apparaîtront ici.",
     "historyPlaceholder": "Aucune évaluation pour l'instant",
-    "historyPlaceholderHint": "Effectuez une admission pour voir votre historique ici."
+    "historyPlaceholderHint": "Effectuez une admission pour voir votre historique ici.",
+    "viewReport": "Voir le rapport"
   },
   "contact": {
     "title": "Contactez-nous",

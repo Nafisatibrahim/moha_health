@@ -1,9 +1,43 @@
 # 🏥 Moha Health
 
-**My own health assistant.**  
-AI-powered intake that actually listens.
+<p align="center">
+  <img src="assets/Moya_Health_logo.png" alt="Moha Health logo" width="280" />
+</p>
 
-Built for [Hack Canada 2026](https://hackcanada.org/).
+<p align="center">
+  <strong>My own health assistant.</strong><br />
+  AI-powered intake that actually listens.
+</p>
+
+<p align="center">
+  Built for <a href="https://hackcanada.org/">Hack Canada 2026</a>.
+</p>
+
+---
+
+## 🎬 Demo
+
+<!-- Replace the link below with your demo video (e.g. Loom, YouTube) when ready -->
+<p align="center">
+  <a href="https://moha-health.replit.app">
+    <img src="assets/Moya_Health_logo.png" alt="Watch demo" width="480" />
+  </a>
+</p>
+<p align="center">
+  <em>Demo video coming soon.</em> Try the <a href="https://moha-health.replit.app">live app</a> in the meantime.
+</p>
+
+---
+
+## 👩‍⚖️ For judges
+
+- **Problem:** Long ER wait times; patients wait hours without structured first contact.
+- **Solution:** Moha Health is a conversational AI intake: collects symptoms, routes to a specialist when needed, and produces a triage + clinical-style report so urgency is clear early.
+- **Innovation:** Multi-agent flow (intake → specialist → triage), optional voice I/O, vitals from video, and persisted health profile + assessment history (Supabase).
+- **Impact:** Reduces anxiety and streamlines the first step before a real clinician; report can be shared or downloaded.
+- **Demo:** Sign in → describe a symptom → answer a few questions → get triage and report → see history on Profile. [Live app](https://moha-health.replit.app) · Backend: Railway.
+
+**60s demo script:** *"I'm [name]. This is Moha Health. In Canada, wait times are long and people sit for hours. We built an AI intake: you describe how you feel, get guided questions, then a triage and report. If you're logged in, it's saved in your profile. Here's the flow…"* → do one full assessment, then open Profile.
 
 ---
 
@@ -33,7 +67,7 @@ Think of it as a **smart front desk**: multi-agent flow, voice in/out, vitals fr
 ## 🛠 Tech stack
 
 - **Backend:** FastAPI, Python 3.11, [Google Gemini](https://ai.google.dev/) (via [Backboard](https://app.backboard.io)) for LLM orchestration, ElevenLabs (voice), Presage (vitals), Cloudinary (uploads).
-- **Database:** [Supabase](https://supabase.com) for health profiles (GET/PUT `/profile/health`).
+- **Database:** [Supabase](https://supabase.com) for health profiles (GET/PUT `/profile/health`) and assessment history (saved on each triage, GET `/profile/assessments`).
 - **Frontend:** React, TypeScript, Vite, Tailwind, shadcn/ui, i18n, optional Auth0.
 - **Deploy:** Backend on [Railway](https://railway.app); frontend runs anywhere (e.g. [Replit](https://replit.com)) and points at the backend URL. [Tailscale](https://tailscale.com) for secure networking where needed.
 
@@ -118,6 +152,7 @@ moha_health/
 | POST | `/speak` | Text → MP3 (ElevenLabs) |
 | POST | `/transcribe` | Audio file → text |
 | GET/PUT | `/profile/health` | Get/set health profile by `patient_id` |
+| GET | `/profile/assessments` | Get assessment history by `patient_id` (newest first) |
 
 ---
 
