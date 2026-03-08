@@ -3,7 +3,7 @@
 # Import the necessary libraries
 import json
 import re
-from integrations.backboard_client import send_message, create_thread, load_prompt
+from backend.integrations.backboard_client import send_message, create_thread, load_prompt
 
 
 def _strip_markdown_json(text: str) -> str:

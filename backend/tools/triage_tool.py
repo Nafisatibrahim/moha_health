@@ -3,7 +3,7 @@
 # This file exposes the triage engine as a tool that the AI assistant can call.
 
 # Import the necessary libraries
-from services.triage import run_triage
+from backend.services.triage import run_triage
 
 # Define the triage tool function
 def triage_tool(symptom: str, severity: int):

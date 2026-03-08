@@ -11,7 +11,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend ./backend
 COPY main.py .
 
-# Option 2: Python reads PORT from env — start command: python main.py
+# Ensure backend package resolves when running from /app (python main.py)
+ENV PYTHONPATH=/app
 ENV PORT=8000
 EXPOSE 8000
 CMD ["python", "main.py"]

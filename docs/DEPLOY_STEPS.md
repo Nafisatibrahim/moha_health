@@ -21,10 +21,10 @@ Use **Path A** if you want “backend elsewhere, Replit for frontend.” Use **P
 
 3. **Configure the service**
    - Root directory: leave default (repo root).
-   - The repo includes a `railway.json` that sets:
-     - Build: `pip install -r requirements.txt`
-     - Start: `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
-   - If you prefer, set these in the service **Settings** → **Build / Start Command** instead.
+   - The repo uses a **Dockerfile** and `railway.json` with:
+     - Build: Dockerfile (builder: DOCKERFILE).
+     - Start: **`python main.py`** (reads PORT from env; do not use `uvicorn ... --port $PORT`).
+   - **Important:** In Railway **Settings** → **Deploy** (or Start Command), either leave **Custom Start Command** empty so `railway.json` is used, or set it to exactly **`python main.py`**. If you set `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`, the container will crash (Railway does not expand `$PORT`).
 
 4. **Generate a public URL**
    - Service → **Settings** → **Networking** → **Generate Domain**.
@@ -55,7 +55,7 @@ Use **Path A** if you want “backend elsewhere, Replit for frontend.” Use **P
    - **Root directory**: leave blank (repo root).
    - **Runtime**: Python 3.
    - **Build command**: `pip install -r requirements.txt`
-   - **Start command**: `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
+   - **Start command**: `python main.py` (Render sets PORT; main.py reads it from env. Do not use `uvicorn ... --port $PORT` if your shell doesn’t expand it.)
    - **Instance type**: Free (or paid if you prefer).
 
 3. **Environment**

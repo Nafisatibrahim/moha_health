@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import StreamingResponse
 import json
-from integrations.backboard_client import (
+from backend.integrations.backboard_client import (
     create_thread,
     send_message,
     load_prompt,
@@ -16,7 +16,7 @@ from integrations.backboard_client import (
     get_or_create_assistant,
 )
 
-from services.intake import (
+from backend.services.intake import (
     store_answer,
     get_intake_data,
     get_missing_fields,
@@ -37,16 +37,16 @@ from services.intake import (
     MAX_SPECIALIST_TURNS,
 )
 
-from services.routing import route_specialist, parse_router_response, ROUTER_VALID_SPECIALTIES
-from services.triage import run_triage
-from services.report import build_doctor_report
-from services.patient_memory import format_previous_visits_for_prompt, append_visit
-from services.knowledge import retrieve as knowledge_retrieve
-from services.vitals_triage import escalate_with_vitals
-from services.extraction import extract_intake_fields
-from services.vitals import get_vitals_from_video
-from services.voice import generate_voice, transcribe_audio
-from services.health_profile_store import get as get_health_profile, set_profile as set_health_profile
+from backend.services.routing import route_specialist, parse_router_response, ROUTER_VALID_SPECIALTIES
+from backend.services.triage import run_triage
+from backend.services.report import build_doctor_report
+from backend.services.patient_memory import format_previous_visits_for_prompt, append_visit
+from backend.services.knowledge import retrieve as knowledge_retrieve
+from backend.services.vitals_triage import escalate_with_vitals
+from backend.services.extraction import extract_intake_fields
+from backend.services.vitals import get_vitals_from_video
+from backend.services.voice import generate_voice, transcribe_audio
+from backend.services.health_profile_store import get as get_health_profile, set_profile as set_health_profile
 
 # Add CORS middleware
 app = FastAPI()

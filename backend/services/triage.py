@@ -1,7 +1,7 @@
 # This file contains the code for the triage service. It will be used to triage the patient's symptoms and return the triage result.
 # This file answers the question: "Given a symptom description and severity (1-10), how urgent is the situation?"
 
-from services.symptom_normalizer import normalize_symptom
+from backend.services.symptom_normalizer import normalize_symptom
 
 
 def run_triage(intake_data: dict, health_profile: str = "", specialist_notes: str = None, rag_context: str = None):
