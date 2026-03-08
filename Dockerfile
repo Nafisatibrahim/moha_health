@@ -10,7 +10,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend (needed for uvicorn backend.main:app)
 COPY backend ./backend
 
-# PORT is set by Railway at runtime
+# Start script expands $PORT at runtime (Railway sets PORT)
+RUN chmod +x backend/start.sh
 ENV PORT=8000
 EXPOSE 8000
-CMD uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+CMD ["./backend/start.sh"]
