@@ -8,6 +8,9 @@ REQUIRED FIELDS:
 - duration
 - additional_symptoms
 
+Patient health background (past surgeries, chronic conditions, medications, allergies — use this to ask better questions and assess risk, e.g. recent surgery can increase danger):
+{health_profile}
+
 Primary symptom:
 {primary_symptom}
 

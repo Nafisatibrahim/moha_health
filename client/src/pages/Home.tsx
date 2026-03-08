@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -37,65 +38,27 @@ function AnimatedSection({ children, className = "", delay = 0 }: { children: Re
 }
 
 const features = [
-  {
-    icon: Brain,
-    title: "AI-Powered Intake",
-    description: "Our conversational AI gathers your symptoms and medical history through an intuitive chat interface — no forms to fill out.",
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-  },
-  {
-    icon: Video,
-    title: "Video Vitals Detection",
-    description: "Upload a short face video and our computer vision model extracts heart rate and respiration — no wearables needed.",
-    color: "text-indigo-600",
-    bg: "bg-indigo-50",
-  },
-  {
-    icon: Zap,
-    title: "Instant Triage",
-    description: "Receive an AI-generated triage recommendation in seconds, with urgency level, department routing, and clinical reasoning.",
-    color: "text-amber-600",
-    bg: "bg-amber-50",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Secure & Private",
-    description: "Your health data is encrypted end-to-end. We follow healthcare data privacy standards to keep your information safe.",
-    color: "text-emerald-600",
-    bg: "bg-emerald-50",
-  },
+  { icon: Brain, titleKey: "home.feature1Title", descKey: "home.feature1Desc", color: "text-blue-600", bg: "bg-blue-50" },
+  { icon: Video, titleKey: "home.feature2Title", descKey: "home.feature2Desc", color: "text-indigo-600", bg: "bg-indigo-50" },
+  { icon: Zap, titleKey: "home.feature3Title", descKey: "home.feature3Desc", color: "text-amber-600", bg: "bg-amber-50" },
+  { icon: ShieldCheck, titleKey: "home.feature4Title", descKey: "home.feature4Desc", color: "text-emerald-600", bg: "bg-emerald-50" },
 ];
 
 const steps = [
-  {
-    icon: MessageSquareText,
-    step: "01",
-    title: "Describe Your Symptoms",
-    description: "Chat with our AI assistant about what you're experiencing. Answer a few follow-up questions for a thorough assessment.",
-  },
-  {
-    icon: UploadCloud,
-    step: "02",
-    title: "Upload a Video",
-    description: "Optionally record a 20-30 second face video. Our AI will extract your heart rate and respiration rate automatically.",
-  },
-  {
-    icon: ClipboardCheck,
-    step: "03",
-    title: "Get Your Triage",
-    description: "Receive an instant triage recommendation including urgency, suggested department, and clinical reasoning.",
-  },
+  { icon: MessageSquareText, step: "01", titleKey: "home.step1Title", descKey: "home.step1Desc" },
+  { icon: UploadCloud, step: "02", titleKey: "home.step2Title", descKey: "home.step2Desc" },
+  { icon: ClipboardCheck, step: "03", titleKey: "home.step3Title", descKey: "home.step3Desc" },
 ];
 
 const stats = [
-  { value: "10,000+", label: "Assessments Completed", icon: Activity },
-  { value: "30s", label: "Average Triage Time", icon: Clock },
-  { value: "98%", label: "User Satisfaction", icon: Star },
-  { value: "24/7", label: "Always Available", icon: Users },
+  { value: "10,000+", labelKey: "home.stat1Label", icon: Activity },
+  { value: "30s", labelKey: "home.stat2Label", icon: Clock },
+  { value: "98%", labelKey: "home.stat3Label", icon: Star },
+  { value: "24/7", labelKey: "home.stat4Label", icon: Users },
 ];
 
 export default function Home() {
+  const { t } = useTranslation();
   return (
     <div className="overflow-hidden">
       <section data-testid="section-hero" className="relative py-20 sm:py-28 lg:py-36">
@@ -114,7 +77,7 @@ export default function Home() {
             >
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary" data-testid="badge-hero">
                 <Activity className="h-4 w-4" />
-                AI-Powered Healthcare Triage
+                {t("home.badgeHero")}
               </div>
 
               <h1
@@ -122,14 +85,14 @@ export default function Home() {
                 style={{ fontFamily: "var(--font-heading)" }}
                 data-testid="text-hero-headline"
               >
-                Emergency Triage,{" "}
+                {t("home.heroHeadline")}{" "}
                 <span className="bg-gradient-to-r from-primary to-indigo-500 bg-clip-text text-transparent">
-                  Powered by AI
+                  {t("home.heroHeadlineHighlight")}
                 </span>
               </h1>
 
               <p className="mt-6 text-lg leading-relaxed text-muted-foreground sm:text-xl" data-testid="text-hero-subtext">
-                Skip the paperwork. Describe your symptoms to our AI assistant, upload a quick video for vitals, and get an instant triage recommendation — all in under a minute.
+                {t("home.heroSubtext")}
               </p>
             </motion.div>
 
@@ -141,13 +104,13 @@ export default function Home() {
             >
               <Link href="/intake">
                 <Button size="lg" className="h-12 px-8 text-base gap-2 shadow-lg shadow-primary/25" data-testid="button-hero-start-assessment">
-                  Start Assessment
+                  {t("home.startAssessment")}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
               <a href="#how-it-works">
                 <Button variant="outline" size="lg" className="h-12 px-8 text-base" data-testid="button-hero-learn-more">
-                  Learn More
+                  {t("home.learnMore")}
                 </Button>
               </a>
             </motion.div>
@@ -161,15 +124,15 @@ export default function Home() {
             >
               <span className="flex items-center gap-1.5">
                 <CheckCircle className="h-4 w-4 text-emerald-500" />
-                HIPAA-Aware Design
+                {t("home.hipaaAware")}
               </span>
               <span className="flex items-center gap-1.5">
                 <CheckCircle className="h-4 w-4 text-emerald-500" />
-                No Account Required
+                {t("home.noAccountRequired")}
               </span>
               <span className="flex items-center gap-1.5">
                 <CheckCircle className="h-4 w-4 text-emerald-500" />
-                Results in Seconds
+                {t("home.resultsInSeconds")}
               </span>
             </motion.div>
           </div>
@@ -180,27 +143,27 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <AnimatedSection className="mx-auto max-w-2xl text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl" style={{ fontFamily: "var(--font-heading)" }} data-testid="text-features-heading">
-              Everything You Need for{" "}
-              <span className="text-primary">Smarter Triage</span>
+              {t("home.featuresHeading")}{" "}
+              <span className="text-primary">{t("home.featuresHeadingHighlight")}</span>
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              Combining conversational AI with computer vision to deliver faster, more accurate emergency assessments.
+              {t("home.featuresSubtext")}
             </p>
           </AnimatedSection>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {features.map((feature, i) => (
-              <AnimatedSection key={feature.title} delay={i * 0.1}>
+              <AnimatedSection key={feature.titleKey} delay={i * 0.1}>
                 <Card className="h-full border-border/60 hover:border-primary/30 hover:shadow-lg transition-all duration-300" data-testid={`card-feature-${i}`}>
                   <CardContent className="p-6">
                     <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl ${feature.bg}`}>
                       <feature.icon className={`h-6 w-6 ${feature.color}`} />
                     </div>
                     <h3 className="mb-2 text-lg font-semibold" style={{ fontFamily: "var(--font-heading)" }}>
-                      {feature.title}
+                      {t(feature.titleKey)}
                     </h3>
                     <p className="text-sm leading-relaxed text-muted-foreground">
-                      {feature.description}
+                      {t(feature.descKey)}
                     </p>
                   </CardContent>
                 </Card>
@@ -214,10 +177,10 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <AnimatedSection className="mx-auto max-w-2xl text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl" style={{ fontFamily: "var(--font-heading)" }} data-testid="text-how-it-works-heading">
-              How It Works
+              {t("home.howItWorks")}
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              Three simple steps to get your AI-powered triage recommendation.
+              {t("home.howItWorksSubtext")}
             </p>
           </AnimatedSection>
 
@@ -229,13 +192,13 @@ export default function Home() {
                     <step.icon className="h-7 w-7" />
                   </div>
                   <span className="mb-2 block text-xs font-bold uppercase tracking-widest text-primary/60">
-                    Step {step.step}
+                    {t("home.stepLabel", { num: step.step })}
                   </span>
                   <h3 className="mb-3 text-xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
-                    {step.title}
+                    {t(step.titleKey)}
                   </h3>
                   <p className="text-sm leading-relaxed text-muted-foreground">
-                    {step.description}
+                    {t(step.descKey)}
                   </p>
 
                   {i < steps.length - 1 && (
@@ -262,7 +225,7 @@ export default function Home() {
                   <p className="text-3xl font-extrabold tracking-tight" style={{ fontFamily: "var(--font-heading)" }}>
                     {stat.value}
                   </p>
-                  <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{t(stat.labelKey)}</p>
                 </div>
               ))}
             </div>
@@ -285,15 +248,15 @@ export default function Home() {
                   style={{ fontFamily: "var(--font-heading)" }}
                   data-testid="text-cta-heading"
                 >
-                  Ready to Get Triaged?
+                  {t("home.ctaHeading")}
                 </h2>
                 <p className="mx-auto mt-4 max-w-xl text-lg text-white/70">
-                  Start your AI-powered health assessment now. No sign-up required — just describe your symptoms and get instant guidance.
+                  {t("home.ctaSubtext")}
                 </p>
                 <div className="mt-10">
                   <Link href="/intake">
                     <Button size="lg" className="h-12 px-10 text-base gap-2 bg-white text-foreground hover:bg-white/90 shadow-xl" data-testid="button-cta-start">
-                      Start Your Assessment
+                      {t("home.startYourAssessment")}
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>

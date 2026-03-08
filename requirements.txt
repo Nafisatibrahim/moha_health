@@ -4,3 +4,5 @@ requests
 python-dotenv
 python-multipart
 presage_technologies
+cloudinary
+elevenlabs

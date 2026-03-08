@@ -8,6 +8,8 @@ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  // Load .env from project root (parent of client) so VITE_AUTH0_* and others are available
+  envDir: path.resolve(__dirname),
   plugins: [
     react(),
     runtimeErrorOverlay(),

@@ -6,6 +6,7 @@ import tempfile
 import requests
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import StreamingResponse
 import json
 from integrations.backboard_client import (
     create_thread,     # Create a thread
@@ -27,6 +28,7 @@ from services.triage import run_triage
 from services.vitals_triage import escalate_with_vitals
 from services.extraction import extract_intake_field
 from services.vitals import get_vitals_from_video
+from services.voice import generate_voice, transcribe_audio
 
 # Add CORS middleware
 app = FastAPI()
@@ -57,16 +59,49 @@ def root():
     }
 
 
+@app.post("/speak")
+def speak(data: dict):
+    """Convert text to speech via ElevenLabs and stream MP3 audio."""
+    text = (data or {}).get("text") or ""
+    if not text.strip():
+        raise HTTPException(status_code=400, detail="Missing or empty 'text' in JSON body")
+    try:
+        audio = generate_voice(text)
+        if audio is None or len(audio) == 0:
+            raise HTTPException(status_code=500, detail="Voice generation failed")
+        return StreamingResponse(
+            iter([audio]),
+            media_type="audio/mpeg",
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"TTS error: {str(e)}")
+
+
+@app.post("/transcribe")
+async def transcribe(audio: UploadFile = File(...)):
+    """Accept an audio file (e.g. webm from browser), return transcribed text."""
+    try:
+        body = await audio.read()
+        if not body:
+            raise HTTPException(status_code=400, detail="Empty audio file")
+        from io import BytesIO
+        text = transcribe_audio(BytesIO(body), audio.filename or "audio.webm")
+        return {"text": text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Transcription error: {str(e)}")
+
+
 @app.get("/frontend-config")
 def frontend_config():
     """
-    Expose non-secret frontend config so index.html can read Cloudinary settings
-    without hardcoding them.
+    Expose non-secret frontend config (Cloudinary, Auth0 client ID for SPA, etc.).
     """
     return {
         "cloudinary_cloud_name": os.getenv("CLOUDINARY_CLOUD_NAME", ""),
         "cloudinary_upload_preset": os.getenv("CLOUDINARY_UPLOAD_PRESET", ""),
         "backend_base_url": os.getenv("BACKEND_PUBLIC_URL", "http://127.0.0.1:8000"),
+        "auth0_domain": os.getenv("AUTH0_DOMAIN", ""),
+        "auth0_client_id": os.getenv("AUTH0_CLIENT_ID", ""),
     }
 
 
@@ -146,12 +181,45 @@ async def vitals_from_url(body: dict):
                 pass
 
 
+def _format_health_profile(health_profile) -> str:
+    """Turn health_profile (dict or str) into a string for prompts."""
+    if not health_profile:
+        return "None provided."
+    if isinstance(health_profile, str):
+        return health_profile.strip() or "None provided."
+    if isinstance(health_profile, dict):
+        parts = []
+        labels = {
+            "allergies": "Allergies",
+            "past_surgeries": "Past surgeries / operations",
+            "last_surgery_date": "Last surgery date",
+            "chronic_conditions": "Chronic conditions",
+            "medications": "Current medications",
+            "blood_type": "Blood type",
+            "family_history": "Family history",
+            "other_relevant": "Other relevant history",
+        }
+        for key, label in labels.items():
+            val = health_profile.get(key) or health_profile.get(key.replace("_", ""))
+            if val and str(val).strip():
+                parts.append(f"{label}: {str(val).strip()}")
+        return "\n".join(parts) if parts else "None provided."
+    return "None provided."
+
+
+# Map frontend locale to full language name for Gemini instruction
+LOCALE_TO_LANGUAGE = {"en": "English", "fr": "French", "es": "Spanish"}
+
+
 # Define the assess endpoint
 @app.post("/assess")
 def assess(data: dict):
-    # User message and optional vitals (from video upload flow)
+    # User message, optional vitals, optional health profile (for context)
     text = data.get("text") or ""
     vitals = data.get("vitals")  # e.g. {"heart_rate": 72, "respiration": 16}
+    health_profile_str = _format_health_profile(data.get("health_profile"))
+    locale = (data.get("locale") or "en").lower()
+    language_name = LOCALE_TO_LANGUAGE.get(locale) or LOCALE_TO_LANGUAGE["en"]
 
     # Get the collected intake data
     intake_data = get_intake_data(thread_id)
@@ -194,13 +262,15 @@ def assess(data: dict):
         # Load the intake question prompt
         prompt_template = load_prompt("intake_question_prompt.txt")
 
-        # Format the prompt with the intake data
+        # Format the prompt with the intake data and health profile
         message = prompt_template.format(
+            health_profile=health_profile_str,
             primary_symptom=intake_data.get("primary_symptom"),
             intake_data=intake_data,
             missing_fields=missing_fields,
             last_question=last_question
         )
+        message += f"\n\nRespond only in the user's language. User language: {language_name}."
 
         response = send_message(thread_id, message)
         if response is None:
@@ -214,8 +284,8 @@ def assess(data: dict):
             "assistant_question": response
         }
 
-    # Intake complete → rule-based triage then vitals escalation
-    triage_result = run_triage(intake_data)
+    # Intake complete → rule-based triage (with health profile context) then vitals escalation
+    triage_result = run_triage(intake_data, health_profile=health_profile_str)
     triage_result = escalate_with_vitals(triage_result, vitals)
 
     return {

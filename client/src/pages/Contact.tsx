@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,6 +25,7 @@ const fadeUp = {
 };
 
 export default function Contact() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
@@ -44,8 +46,8 @@ export default function Contact() {
 
     if (!formData.name || !formData.email || !formData.message) {
       toast({
-        title: "Missing fields",
-        description: "Please fill in all fields before submitting.",
+        title: t("contact.missingFields"),
+        description: t("contact.fillAllFields"),
         variant: "destructive",
       });
       return;
@@ -56,8 +58,8 @@ export default function Contact() {
       setSending(false);
       setSubmitted(true);
       toast({
-        title: "Message sent!",
-        description: "We'll get back to you within 24 hours.",
+        title: t("contact.messageSent"),
+        description: t("contact.getBackToYou"),
       });
     }, 1200);
   };
@@ -73,7 +75,7 @@ export default function Contact() {
             className="font-heading text-4xl font-bold tracking-tight text-foreground md:text-5xl"
             data-testid="text-contact-title"
           >
-            Get in Touch
+            {t("contact.title")}
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -82,8 +84,7 @@ export default function Contact() {
             className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground"
             data-testid="text-contact-subtitle"
           >
-            Have questions about Lumina Health? We'd love to hear from you.
-            Reach out and our team will respond within 24 hours.
+            {t("contact.subtitle")}
           </motion.p>
         </div>
       </section>
@@ -146,7 +147,7 @@ export default function Contact() {
                       htmlFor="name"
                       className="mb-1.5 block text-sm font-medium"
                     >
-                      Full Name
+                      {t("contact.name")}
                     </label>
                     <Input
                       id="name"
@@ -162,7 +163,7 @@ export default function Contact() {
                       htmlFor="email"
                       className="mb-1.5 block text-sm font-medium"
                     >
-                      Email Address
+                      {t("contact.email")}
                     </label>
                     <Input
                       id="email"
@@ -179,7 +180,7 @@ export default function Contact() {
                       htmlFor="message"
                       className="mb-1.5 block text-sm font-medium"
                     >
-                      Message
+                      {t("contact.message")}
                     </label>
                     <Textarea
                       id="message"
@@ -199,11 +200,11 @@ export default function Contact() {
                     data-testid="button-submit"
                   >
                     {sending ? (
-                      "Sending..."
+                      t("intake.processing")
                     ) : (
                       <>
                         <Send className="mr-2 h-4 w-4" />
-                        Send Message
+                        {t("contact.sendMessage")}
                       </>
                     )}
                   </Button>

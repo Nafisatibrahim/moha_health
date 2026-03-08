@@ -1,41 +1,43 @@
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Activity, Github, Twitter, Linkedin } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
-const footerColumns = [
+const footerColumnKeys = [
   {
-    title: "Product",
+    titleKey: "footer.product" as const,
     links: [
-      { label: "AI Triage", href: "/intake" },
-      { label: "How It Works", href: "/#how-it-works" },
-      { label: "Features", href: "/#features" },
+      { labelKey: "footer.aiTriage" as const, href: "/intake" },
+      { labelKey: "footer.howItWorks" as const, href: "/#how-it-works" },
+      { labelKey: "footer.features" as const, href: "/#features" },
     ],
   },
   {
-    title: "Company",
+    titleKey: "footer.company" as const,
     links: [
-      { label: "About", href: "/about" },
-      { label: "Contact", href: "/contact" },
-      { label: "Careers", href: "/contact" },
+      { labelKey: "footer.about" as const, href: "/about" },
+      { labelKey: "footer.contact" as const, href: "/contact" },
+      { labelKey: "footer.careers" as const, href: "/contact" },
     ],
   },
   {
-    title: "Legal",
+    titleKey: "footer.legal" as const,
     links: [
-      { label: "Privacy Policy", href: "/about" },
-      { label: "Terms of Service", href: "/about" },
-      { label: "HIPAA Compliance", href: "/about" },
+      { labelKey: "footer.privacyPolicy" as const, href: "/about" },
+      { labelKey: "footer.termsOfService" as const, href: "/about" },
+      { labelKey: "footer.hipaaCompliance" as const, href: "/about" },
     ],
   },
 ];
 
 const socialLinks = [
-  { icon: Twitter, href: "#", label: "Twitter" },
-  { icon: Github, href: "#", label: "GitHub" },
-  { icon: Linkedin, href: "#", label: "LinkedIn" },
+  { icon: Twitter, href: "#", labelKey: "footer.twitter" as const },
+  { icon: Github, href: "#", labelKey: "footer.github" as const },
+  { icon: Linkedin, href: "#", labelKey: "footer.linkedin" as const },
 ];
 
 export default function Footer() {
+  const { t } = useTranslation();
   return (
     <footer data-testid="footer" className="gradient-navy text-white/90">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
@@ -46,20 +48,20 @@ export default function Footer() {
                 <Activity className="h-4 w-4" />
               </div>
               <span className="text-lg font-bold tracking-tight" style={{ fontFamily: "var(--font-heading)" }}>
-                Lumina Health
+                {t("footer.brand")}
               </span>
             </Link>
             <p className="text-sm text-white/60 max-w-xs mb-6">
-              AI-powered emergency triage and vital sign analysis for faster, smarter healthcare decisions.
+              {t("footer.tagline")}
             </p>
             <div className="flex gap-3">
               {socialLinks.map((social) => (
                 <a
-                  key={social.label}
+                  key={social.labelKey}
                   href={social.href}
-                  data-testid={`link-social-${social.label.toLowerCase()}`}
+                  data-testid={`link-social-${social.labelKey.split(".").pop()}`}
                   className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
-                  aria-label={social.label}
+                  aria-label={t(social.labelKey)}
                 >
                   <social.icon className="h-4 w-4" />
                 </a>
@@ -67,23 +69,23 @@ export default function Footer() {
             </div>
           </div>
 
-          {footerColumns.map((column) => (
-            <div key={column.title}>
+          {footerColumnKeys.map((column) => (
+            <div key={column.titleKey}>
               <h3
                 className="text-sm font-semibold uppercase tracking-wider text-white/40 mb-4"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
-                {column.title}
+                {t(column.titleKey)}
               </h3>
               <ul className="space-y-3">
                 {column.links.map((link) => (
-                  <li key={link.label}>
+                  <li key={link.labelKey}>
                     <Link
                       href={link.href}
-                      data-testid={`link-footer-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
+                      data-testid={`link-footer-${link.labelKey.split(".").pop()}`}
                       className="text-sm text-white/60 transition-colors hover:text-white"
                     >
-                      {link.label}
+                      {t(link.labelKey)}
                     </Link>
                   </li>
                 ))}
@@ -96,10 +98,10 @@ export default function Footer() {
 
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           <p className="text-sm text-white/40" data-testid="text-copyright">
-            &copy; {new Date().getFullYear()} Lumina Health. All rights reserved.
+            {t("footer.copyright", { year: new Date().getFullYear() })}
           </p>
           <p className="text-sm text-white/40">
-            Built with care for better healthcare outcomes.
+            {t("footer.builtWithCare")}
           </p>
         </div>
       </div>

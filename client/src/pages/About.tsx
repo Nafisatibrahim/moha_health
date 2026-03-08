@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -24,6 +25,7 @@ const fadeUp = {
 };
 
 export default function About() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen">
       <section className="gradient-hero-soft py-20 lg:py-28">
@@ -35,7 +37,7 @@ export default function About() {
             className="font-heading text-4xl font-bold tracking-tight text-foreground md:text-5xl"
             data-testid="text-about-title"
           >
-            About Lumina Health
+            {t("about.title")}
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -44,9 +46,7 @@ export default function About() {
             className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground"
             data-testid="text-about-subtitle"
           >
-            We're building the future of emergency triage — combining artificial
-            intelligence with computer-vision vitals to deliver faster, smarter
-            healthcare decisions.
+            {t("about.subtitle")}
           </motion.p>
         </div>
       </section>
@@ -253,16 +253,15 @@ export default function About() {
             className="font-heading text-3xl font-bold tracking-tight text-white"
             data-testid="text-about-cta-title"
           >
-            Ready to Experience AI Triage?
+            {t("about.ctaTitle")}
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-blue-200/80">
-            Try our AI-powered intake assistant and see how fast intelligent
-            triage can be.
+            {t("about.ctaSubtext")}
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link href="/intake">
               <Button size="lg" className="w-full sm:w-auto" data-testid="button-about-start-assessment">
-                Start Assessment
+                {t("about.startAssessment")}
               </Button>
             </Link>
             <Link href="/contact">
@@ -272,7 +271,7 @@ export default function About() {
                 className="w-full border-white/20 text-white hover:bg-white/10 sm:w-auto"
                 data-testid="button-about-contact"
               >
-                Contact Us
+                {t("about.contactUs")}
               </Button>
             </Link>
           </div>
