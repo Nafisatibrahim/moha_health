@@ -1,7 +1,7 @@
 import "./i18n";
 import { createRoot } from "react-dom/client";
 import { Auth0Provider } from "@auth0/auth0-react";
-import { Auth0EnabledContext } from "@/lib/auth0-context";
+import { Auth0EnabledContext, Auth0UserContext, Auth0UserProvider } from "@/lib/auth0-context";
 import App from "./App";
 import "./index.css";
 
@@ -25,14 +25,18 @@ if (auth0Enabled) {
         cacheLocation="localstorage"
         useRefreshTokens={true}
       >
-        <App />
+        <Auth0UserProvider>
+          <App />
+        </Auth0UserProvider>
       </Auth0Provider>
     </Auth0EnabledContext.Provider>
   );
 } else {
   root.render(
     <Auth0EnabledContext.Provider value={false}>
-      <App />
+      <Auth0UserContext.Provider value={null}>
+        <App />
+      </Auth0UserContext.Provider>
     </Auth0EnabledContext.Provider>
   );
 }

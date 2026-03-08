@@ -30,3 +30,13 @@ node_modules
 
 # Unused (using client/ for frontend)
 frontend/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
+
+# Test / coverage (optional)
+.coverage
+htmlcov/
+.pytest_cache/

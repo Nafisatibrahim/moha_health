@@ -1,0 +1,22 @@
+# Triage and urgency reference (for RAG retrieval)
+
+## General principles
+- Prioritize patient safety. When in doubt, recommend higher acuity or urgent evaluation.
+- Consider patient history: recent surgery, chronic conditions, and medications can change urgency.
+- Chest pain, difficulty breathing, and severe abdominal pain warrant urgent or emergency evaluation.
+
+## Symptom–urgency cues
+- Chest pain: often requires emergency or cardiology evaluation; consider cardiac cause until ruled out.
+- Rash / skin: typically lower urgency unless widespread, febrile, or rapidly spreading; suggest dermatology or primary care.
+- Dental / tooth: urgent care or dentistry; escalate if swelling, fever, or difficulty swallowing.
+- Abdominal pain: severity and location matter; severe or worsening pain suggests emergency evaluation.
+- Shortness of breath: high priority; consider emergency or urgent care.
+- Itching without systemic symptoms: usually primary care or dermatology; low urgency unless anaphylaxis suspected.
+
+## Canadian Emergency Department Triage (CTAS-style)
+- Level 1–2: Resuscitation / emergent – immediate care.
+- Level 3: Urgent – care within 30 minutes.
+- Level 4: Less urgent – care within 1 hour.
+- Level 5: Non-urgent – care within 2 hours.
+
+Use these as reference only; the triage engine applies rule-based logic with patient-specific context.

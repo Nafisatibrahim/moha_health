@@ -38,10 +38,11 @@ def _get_voice_id(name: str = "Rachel") -> str:
     return "21m00Tcm4TlvDq8ikWAM"
 
 
-def generate_voice(text: str) -> bytes:
-    """Generate TTS audio bytes (MP3) via ElevenLabs."""
+def generate_voice(text: str, voice_id: str | None = None) -> bytes:
+    """Generate TTS audio bytes (MP3) via ElevenLabs. If voice_id is provided, use it; else default to Rachel."""
     client = _get_client()
-    voice_id = _get_voice_id("Rachel")
+    if not (voice_id and voice_id.strip()):
+        voice_id = _get_voice_id("Rachel")
     result = client.text_to_speech.convert(
         voice_id=voice_id,
         text=text,
@@ -52,13 +53,18 @@ def generate_voice(text: str) -> bytes:
     return b"".join(result)
 
 
-def transcribe_audio(audio_file: BinaryIO, filename: str = "audio.webm") -> str:
-    """Transcribe audio file to text via ElevenLabs STT. Returns transcribed text."""
+def transcribe_audio(
+    audio_file: BinaryIO,
+    filename: str = "audio.webm",
+    language_code: str | None = None,
+) -> str:
+    """Transcribe audio file to text via ElevenLabs STT. Returns transcribed text.
+    If language_code is set (e.g. 'en', 'fr'), hints the model to avoid wrong-language transcription."""
     client = _get_client()
-    result = client.speech_to_text.convert(
-        model_id="scribe_v2",
-        file=audio_file,
-    )
+    kwargs = {"model_id": "scribe_v2", "file": audio_file}
+    if language_code and language_code.strip():
+        kwargs["language_code"] = language_code.strip()
+    result = client.speech_to_text.convert(**kwargs)
     if hasattr(result, "text"):
         return result.text or ""
     if isinstance(result, str):

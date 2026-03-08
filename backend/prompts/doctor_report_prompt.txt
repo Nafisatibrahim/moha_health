@@ -1,0 +1,12 @@
+Produce a concise doctor report for hospital processing. Include:
+
+1. Chief complaint and primary symptom
+2. Duration, location, severity (1-10), additional symptoms
+3. Health profile summary (past surgeries, chronic conditions, medications, allergies)
+4. Specialist assessment (if any): which expert, key findings, whether photo was reviewed
+5. Vitals (if available)
+6. Triage: urgency, recommended department, reason
+
+Format as clear, scannable sections. No treatment advice. For use by triage/nursing only.
+
+Input data will be provided in structured form; output a short narrative or bullet summary.

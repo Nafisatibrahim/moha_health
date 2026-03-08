@@ -6,9 +6,6 @@ import os
 from pathlib import Path
 import requests
 from dotenv import load_dotenv, set_key
-from tools.triage_tool import triage_tool # Import the triage tool
-#from tools.extraction_tool import extraction_tool # Import the extraction tool
-#from tools.intake_tool import intake_tool # Import the intake tool
 
 # Load environment variables
 load_dotenv()
@@ -16,6 +13,9 @@ load_dotenv()
 API_KEY = os.getenv("BACKBOARD_API_KEY")
 BASE_URL = os.getenv("BACKBOARD_BASE_URL", "https://app.backboard.io/api")
 ASSISTANT_ID = os.getenv("BACKBOARD_ASSISTANT_ID")
+
+# Per-role assistant IDs (general, dermatology, dental, cardiology)
+ASSISTANT_IDS = {}
 
 HEADERS = {
     "X-API-Key": API_KEY
@@ -28,68 +28,121 @@ def load_prompt(prompt_name: str) -> str:
     with open(prompt_path, "r", encoding="utf-8") as f:
         return f.read()
 
-# Create Backboard assistant
-def get_or_create_assistant():
 
-    global ASSISTANT_ID
+def _env_key_for_role(role: str) -> str:
+    return f"BACKBOARD_ASSISTANT_ID_{role.upper()}"
 
-    if ASSISTANT_ID:
-        return ASSISTANT_ID
 
-    system_prompt = load_prompt("triage_prompt.txt")
+def get_or_create_assistant(role: str = "general"):
+    """
+    Get or create a Backboard assistant for the given role.
+    role: "general", "dermatology", or "dental".
+    """
+    global ASSISTANT_IDS, ASSISTANT_ID
 
-    payload = {
-        "name": "HackCanada-Triage",
-        "system_prompt": system_prompt,
-        "model": "gemini-1.5-pro",
-        "tools": [
-            {
-                "name": "triage_tool",
-                "description": "Determine medical urgency based on symptom and severity.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "symptom": {
-                            "type": "string"
-                        },
-                        "severity": {
-                            "type": "integer"
-                        }
-                    },
-                    "required": ["symptom", "severity"]
-                }
-            }
-        ]
-    }
+    if role not in ASSISTANT_IDS:
+        env_key = _env_key_for_role(role)
+        existing = os.getenv(env_key)
+        if role == "general" and not existing and ASSISTANT_ID:
+            existing = ASSISTANT_ID
+        if existing:
+            ASSISTANT_IDS[role] = existing
+            return existing
 
-    response = requests.post(
-        f"{BASE_URL}/assistants",
-        json=payload,
-        headers=HEADERS
-    )
+        if role == "general":
+            system_prompt = load_prompt("general_physician_prompt.txt")
+            name = "HackCanada-General"
+        elif role == "dermatology":
+            system_prompt = (
+                "You are a dermatology expert assistant in hospital intake. "
+                "Ask focused questions about location, spread, duration, itching/pain; "
+                "if no symptom photo was shared, ask the patient to upload one. "
+                "Do not give treatment advice. Be concise. Respond only in the user's language."
+            )
+            name = "HackCanada-Dermatology"
+        elif role == "dental":
+            system_prompt = (
+                "You are a dental expert assistant in hospital intake. "
+                "Ask focused questions about which tooth/area, pain type, swelling, trauma. "
+                "Do not give treatment advice. Be concise. Respond only in the user's language."
+            )
+            name = "HackCanada-Dental"
+        elif role == "cardiology":
+            system_prompt = (
+                "You are a cardiology expert assistant in hospital intake. "
+                "Ask about chest discomfort type, radiation, shortness of breath, duration, cardiac history. "
+                "Do not request a photo. Do not give treatment advice. Be concise. Respond only in the user's language."
+            )
+            name = "HackCanada-Cardiology"
+        else:
+            system_prompt = load_prompt("general_physician_prompt.txt")
+            name = f"HackCanada-{role.title()}"
 
-    assistant_id = response.json()["assistant_id"]
+        payload = {
+            "name": name,
+            "system_prompt": system_prompt,
+            "model": "gemini-2.5-pro",
+            "tools": [],
+        }
 
-    # Save assistant ID to .env so we reuse it
-    env_path = Path(__file__).resolve().parent.parent.parent / ".env"
-    set_key(env_path, "BACKBOARD_ASSISTANT_ID", assistant_id)
+        response = requests.post(
+            f"{BASE_URL}/assistants",
+            json=payload,
+            headers=HEADERS,
+        )
+        response.raise_for_status()
+        assistant_id = response.json()["assistant_id"]
+        ASSISTANT_IDS[role] = assistant_id
 
-    ASSISTANT_ID = assistant_id
+        env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+        set_key(env_path, env_key, assistant_id)
+        if role == "general":
+            ASSISTANT_ID = assistant_id
 
-    return assistant_id
+    return ASSISTANT_IDS[role]
 
-# Create a conversation thread
-def create_thread():
 
-    assistant_id = get_or_create_assistant()
-
+def create_thread(assistant_id=None, role: str = "general"):
+    """
+    Create a Backboard thread. If assistant_id is given, use it; else use assistant for role (default general).
+    """
+    if assistant_id is None:
+        assistant_id = get_or_create_assistant(role=role)
     response = requests.post(
         f"{BASE_URL}/assistants/{assistant_id}/threads",
         json={},
-        headers=HEADERS
+        headers=HEADERS,
     )
-
+    response.raise_for_status()
     return response.json()["thread_id"]
+
+# Upload a document (e.g. symptom image) to the thread for RAG/context. Supports images: .png, .jpg, .jpeg, .webp, etc.
+def upload_document_to_thread(thread_id: str, image_url: str) -> bool:
+    """Fetch image from URL and upload to Backboard thread. Returns True on success."""
+    try:
+        r = requests.get(image_url, timeout=30)
+        r.raise_for_status()
+        content_type = r.headers.get("content-type", "").lower()
+        ext = ".jpg"
+        if "png" in content_type:
+            ext = ".png"
+        elif "webp" in content_type:
+            ext = ".webp"
+        elif "gif" in content_type:
+            ext = ".gif"
+        filename = f"symptom_image{ext}"
+        files = {"file": (filename, r.content, content_type or "image/jpeg")}
+        resp = requests.post(
+            f"{BASE_URL}/threads/{thread_id}/documents",
+            headers=HEADERS,
+            files=files,
+            timeout=60,
+        )
+        resp.raise_for_status()
+        return True
+    except Exception:
+        return False
+
 
 # Send a message to the assistant
 def send_message(thread_id, message):

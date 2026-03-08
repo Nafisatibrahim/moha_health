@@ -4,10 +4,12 @@
 from services.symptom_normalizer import normalize_symptom
 
 
-def run_triage(intake_data: dict, health_profile: str = ""):
+def run_triage(intake_data: dict, health_profile: str = "", specialist_notes: str = None, rag_context: str = None):
     """
     Basic rule-based triage engine.
     Uses health_profile (e.g. past surgeries) to escalate when relevant — e.g. recent surgery + return symptoms.
+    specialist_notes: optional notes from dermatology/dental expert for context.
+    rag_context: optional retrieved guideline excerpt for reference (logged/used in report; rules remain primary).
     """
     symptom = normalize_symptom(intake_data.get("primary_symptom", ""))
     severity = intake_data.get("severity", 0)

@@ -9,6 +9,19 @@ That screen is **Auth0 Universal Login**. The first part is your **Auth0 tenant*
 
 You can also customize the look and copy under **Branding** → **Universal Login**.
 
+## Why "Log in to Moha to continue to Moha"?
+
+Auth0’s default prompt is “Log in to [Application Name] to continue to [Application Name]”. If your app name is **Moha**, both parts are “Moha”, so it reads redundantly. To fix it:
+
+1. Auth0 Dashboard → **Branding** → **Universal Login** → **Advanced Options** → **Custom Text**.
+2. Choose the **Login** (or **Sign Up**) prompt and the right **Screen**.
+3. Find the key for the “continue to” line (e.g. the description or title for that screen) and either:
+   - Change it to a single line like **“Log in to Moha”**, or  
+   - Set the “continue to” text to something else (e.g. your product name or “this app”).
+4. **Save Changes**.
+
+No code changes are required; the text is fully controlled in Auth0.
+
 ---
 
 This app uses [Auth0](https://auth0.com) for secure sign-in and user identity. Auth0 provides social login, MFA, and passwordless options out of the box.

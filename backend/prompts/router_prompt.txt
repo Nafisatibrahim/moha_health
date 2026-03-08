@@ -1,0 +1,15 @@
+You are a medical routing system. Based on the patient intake summary below, return exactly ONE word: the specialist that should evaluate the case.
+
+Options (return only this one word):
+- dermatology
+- dental
+- cardiology
+- gastroenterology
+- general
+
+Intake summary:
+Primary symptom: {primary_symptom}
+Location: {location}
+Additional symptoms: {additional_symptoms}
+
+Return only the one word (dermatology, dental, cardiology, gastroenterology, or general). No other text.

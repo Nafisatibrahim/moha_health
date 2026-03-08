@@ -73,11 +73,70 @@ def get_missing_fields(thread_id: str):
 def is_intake_complete(thread_id: str):
     """
     Return True if all required intake fields have been collected.
+    The backend (not the model) decides when to stop asking: once extraction
+    has populated primary_symptom, location, severity, duration, and
+    additional_symptoms, intake is complete and the flow moves to specialist or triage.
     """
     return len(get_missing_fields(thread_id)) == 0
 
 # Track the last question asked
 thread_last_question = {}
+
+# Phase: "general" | "specialist" | "triage" (triage = done with intake/specialist, ready for triage)
+thread_phase = {}
+# Which specialist is active (e.g. "dermatology", "dental")
+thread_specialist = {}
+# Backboard thread_id for the specialist conversation (thread is per assistant)
+thread_specialist_thread_id = {}
+# Number of specialist exchange turns (user message + assistant reply = 1)
+thread_specialist_turns = {}
+# Accumulated specialist assessment notes for report/triage
+thread_specialist_notes = {}
+
+# Max specialist turns before forcing transition to triage
+MAX_SPECIALIST_TURNS = 3
+
+
+def get_phase(thread_id: str) -> str:
+    return thread_phase.get(thread_id, "general")
+
+
+def set_phase(thread_id: str, phase: str):
+    thread_phase[thread_id] = phase
+
+
+def get_specialist(thread_id: str) -> str:
+    return thread_specialist.get(thread_id, "")
+
+
+def set_specialist(thread_id: str, specialist: str):
+    thread_specialist[thread_id] = specialist
+
+
+def get_specialist_thread_id(thread_id: str):
+    return thread_specialist_thread_id.get(thread_id)
+
+
+def set_specialist_thread_id(thread_id: str, sid: str):
+    thread_specialist_thread_id[thread_id] = sid
+
+
+def get_specialist_turns(thread_id: str) -> int:
+    return thread_specialist_turns.get(thread_id, 0)
+
+
+def increment_specialist_turns(thread_id: str):
+    thread_specialist_turns[thread_id] = get_specialist_turns(thread_id) + 1
+
+
+def get_specialist_notes(thread_id: str) -> str:
+    return thread_specialist_notes.get(thread_id, "")
+
+
+def append_specialist_notes(thread_id: str, text: str):
+    cur = thread_specialist_notes.get(thread_id, "")
+    thread_specialist_notes[thread_id] = (cur + "\n" + text).strip() if cur else text
+
 
 def store_last_question(thread_id: str, question: str):
     """
